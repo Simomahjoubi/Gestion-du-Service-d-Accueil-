@@ -1,11 +1,8 @@
 import React from 'react';
-import { 
-  Users, 
-  TrendingUp,
-  Activity
-} from 'lucide-react';
+import { Users, TrendingUp, Activity } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { ServiceManagement } from './ServiceManagement';
+import { AdherentManagement } from './AdherentManagement';
 
 export const AdminDashboard: React.FC = () => {
   return (
@@ -26,9 +23,7 @@ export const AdminDashboard: React.FC = () => {
 
         <section className="mt-12">
           <h2 className="text-xl font-bold text-gray-800 mb-6 text-left">Gestion des adhérents</h2>
-          <div className="p-12 border border-dashed border-gray-200 rounded-xl text-center text-gray-400">
-            Interface de gestion des adhérents (En développement)
-          </div>
+          <AdherentManagement />
         </section>
         
         <div className="mt-12">

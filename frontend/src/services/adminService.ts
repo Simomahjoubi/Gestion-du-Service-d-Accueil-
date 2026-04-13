@@ -1,6 +1,30 @@
 import api from './api';
 import { Service, Motif } from './serviceService';
 
+export type TypeAffectationMotif = 'ALEATOIRE' | 'SPECIFIQUE';
+
+export interface MotifDetail {
+  id: number;
+  code: string;
+  libelleFr: string;
+  libelleAr?: string;
+  serviceId: number;
+  serviceNom: string;
+  typeAffectation: TypeAffectationMotif;
+  utilisateurs: { priorite: number; userId: number; nomComplet: string; role: string }[];
+}
+
+export interface CreateMotifPayload {
+  code: string;
+  libelleFr: string;
+  libelleAr?: string;
+  serviceId: number;
+  typeAffectation: TypeAffectationMotif;
+  user1Id?: number;  // si SPECIFIQUE (obligatoire)
+  user2Id?: number;  // optionnel
+  user3Id?: number;  // optionnel
+}
+
 export interface UserDetail {
   id?: number;
   username: string;
@@ -44,8 +68,22 @@ export const adminService = {
   },
 
   // Motifs
-  createMotif: async (motifData: { code: string, libelleFr: string, serviceId: number }) => {
+  createMotif: async (motifData: CreateMotifPayload) => {
     const response = await api.post<Motif>('/admin/motifs', motifData);
+    return response.data;
+  },
+  getMotifDetail: async (id: number): Promise<MotifDetail> => {
+    const response = await api.get<MotifDetail>(`/admin/motifs/${id}`);
+    return response.data;
+  },
+  updateMotif: async (id: number, motifData: CreateMotifPayload): Promise<MotifDetail> => {
+    const response = await api.put<MotifDetail>(`/admin/motifs/${id}`, motifData);
+    return response.data;
+  },
+
+  // Fonctionnaires d'un service (pour les selects du formulaire motif)
+  getServiceFonctionnaires: async (serviceId: number): Promise<UserDetail[]> => {
+    const response = await api.get<UserDetail[]>(`/admin/services/${serviceId}/fonctionnaires`);
     return response.data;
   }
 };

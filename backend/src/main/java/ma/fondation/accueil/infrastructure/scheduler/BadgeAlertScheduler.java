@@ -23,7 +23,7 @@ public class BadgeAlertScheduler {
      * Vérifie toutes les 5 minutes s'il y a des badges non restitués
      * plus de 45 minutes après la clôture par le fonctionnaire.
      */
-    @Scheduled(fixedRate = 300000) // 5 minutes
+    // @Scheduled(fixedRate = 300000) // 5 minutes
     public void verifierBadgesNonRestitues() {
         LocalDateTime limite = LocalDateTime.now().minusMinutes(45);
         List<Visite> visitesEnRetard = visiteRepo.findVisitesAlerteBadge(limite);

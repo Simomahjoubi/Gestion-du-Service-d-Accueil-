@@ -12,6 +12,9 @@ public class VisiteurResponse {
     private String numAdhesion;
     private String nom;
     private String prenom;
+    private String telephone;
+    private String sexe;
+    private String situationFamiliale;
     private TypeVisiteur type;
     private String lienParente;
     private StatutAdherent statutAdherent;
@@ -19,8 +22,9 @@ public class VisiteurResponse {
     private String grade;
     private String typeAssurance;
     private String affectation;
-    
+
     // Infos du parent pour les enfants/conjoints
+    private Long parentId;
     private String parentNom;
     private String parentCin;
 }

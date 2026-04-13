@@ -3,6 +3,7 @@ package ma.fondation.accueil.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 import ma.fondation.accueil.domain.enums.AlgorithmeAffectation;
+import ma.fondation.accueil.domain.enums.TypeAffectationMotif;
 
 @Entity
 @Table(name = "objet_visite")
@@ -28,6 +29,11 @@ public class ObjetVisite {
     @JoinColumn(name = "service_id", nullable = false)
     private ServiceEntity service;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private TypeAffectationMotif typeAffectation = TypeAffectationMotif.ALEATOIRE;
+
+    /** Utilisé uniquement si typeAffectation = ALGORITHMIQUE */
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private AlgorithmeAffectation algorithme = AlgorithmeAffectation.SEQUENTIEL;

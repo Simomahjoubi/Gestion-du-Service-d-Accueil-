@@ -16,7 +16,7 @@ import {
   UserPlus
 } from 'lucide-react';
 
-import { visiteurService, Visitor } from '../../services/visiteurService';
+import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
 
 export const NouvelleVisitePage: React.FC = () => {
@@ -267,7 +267,7 @@ export const NouvelleVisitePage: React.FC = () => {
                 {/* Règle Adhérent : Affiche CIN, N° Adhésion et détails pro */}
                 {foundVisitor?.type === 'ADHERENT' && (
                   <>
-                    <InfoRow label="CIN" value={foundVisitor.cin} />
+                    <InfoRow label="CIN" value={foundVisitor.cin || 'N/A'} />
                     <InfoRow label="N° Adhérent" value={foundVisitor.numAdhesion || 'N/A'} color="text-blue-600" />
                     <div className="pt-2 mt-2 border-t border-dashed border-gray-100 space-y-3">
                       <InfoRow label="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'N/A'} />
@@ -285,7 +285,7 @@ export const NouvelleVisitePage: React.FC = () => {
                 {/* Règle Conjoint : Affiche son CIN, Lien et infos de l'Adhérent */}
                 {foundVisitor?.type === 'CONJOINT' && (
                   <>
-                    <InfoRow label="CIN Conjoint" value={foundVisitor.cin} />
+                    <InfoRow label="CIN Conjoint" value={foundVisitor.cin || 'N/A'} />
                     <InfoRow label="Lien" value={foundVisitor.lienParente || 'ÉPOUSE'} color="text-purple-600" />
                     <div className="pt-2 mt-2 border-t border-dashed border-gray-100">
                       <InfoRow label="Adhérent" value={foundVisitor.parentNom || 'N/A'} color="text-slate-900" />

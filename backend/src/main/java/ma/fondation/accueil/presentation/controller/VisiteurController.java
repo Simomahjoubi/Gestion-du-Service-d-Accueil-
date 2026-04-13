@@ -35,7 +35,7 @@ public class VisiteurController {
 
     @GetMapping("/recherche/nom")
     public ResponseEntity<List<VisiteurResponse>> rechercherParNom(@RequestParam String query) {
-        List<VisiteurResponse> visiteurs = visiteurRepo.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(query, query)
+        List<VisiteurResponse> visiteurs = visiteurRepo.search(query, null, null, null, null, null)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

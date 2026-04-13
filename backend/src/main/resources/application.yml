@@ -1,14 +1,19 @@
 spring:
   application:
     name: service-accueil
+  sql:
+    init:
+      mode: always
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:sqlserver://localhost:1433;databaseName=FH2_ACCUEIL_DB;encrypt=true;trustServerCertificate=true}
+    url: ${SPRING_DATASOURCE_URL:jdbc:sqlserver://db:1433;databaseName=FH2_ACCUEIL_DB;encrypt=true;trustServerCertificate=true;connectTimeout=60;loginTimeout=60}
     username: ${SPRING_DATASOURCE_USERNAME:sa}
     password: ${SPRING_DATASOURCE_PASSWORD:YourStrong@Passw0rd}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      connection-timeout: 60000
   jpa:
     hibernate:
-      ddl-auto: none # Désactivé pour laisser la main aux scripts SQL
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

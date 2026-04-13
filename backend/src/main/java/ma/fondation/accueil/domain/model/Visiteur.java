@@ -31,6 +31,8 @@ public class Visiteur {
 
     private String telephone;
 
+    private String sexe; // MONSIEUR, MADAME, MADEMOISELLE
+
     @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
@@ -41,8 +43,9 @@ public class Visiteur {
     @Enumerated(EnumType.STRING)
     private ma.fondation.accueil.domain.enums.StatutAdherent statutAdherent; // ACTIF, RETRAITE
 
-    private String typeAdherentDetail; // Budget général, DGST, etc.
-    private String grade; // Échelle 6-9, Caïd, etc.
-    private String typeAssurance; // Non assuré, MI, MI/FH2
+    private String situationFamiliale; // CELIBATAIRE, MARIE, VEUF
+    private String typeAdherentDetail; // Budget Général, DGST, etc.
+    private String grade; // Echelle 6-9, Caïd, etc.
+    private String typeAssurance; // MI, MI/FH2, Non assuré
     private String affectation; // Lieu d'affectation
 }

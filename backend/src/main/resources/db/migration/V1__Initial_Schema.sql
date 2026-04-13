@@ -1,5 +1,7 @@
 -- V1__Initial_Schema.sql
--- Based on current Java entities (Hibernate generation output)
+-- Schema complet correspondant aux entités Java actuelles
+-- Note : Flyway est désactivé (spring.flyway.enabled=false) — Hibernate ddl-auto:update gère le schéma.
+-- Ce fichier sert de référence / bootstrap manuel si nécessaire.
 
 CREATE TABLE services (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
@@ -51,10 +53,11 @@ CREATE TABLE visiteurs (
     cin NVARCHAR(255) NULL UNIQUE,
     num_adhesion NVARCHAR(255) NULL UNIQUE,
     telephone NVARCHAR(255) NULL,
+    sexe NVARCHAR(50) NULL,
+    situation_familiale NVARCHAR(50) NULL,
     type NVARCHAR(255) NOT NULL CHECK (type IN ('ADHERENT','CONJOINT','ENFANT','PARTENAIRE','MEDECIN','VIP','EXTERNE')),
-    statut_adherent NVARCHAR(255) NULL CHECK (statut_adherent IN ('ACTIF','RETRAITE')),
+    statut_adherent NVARCHAR(255) NULL CHECK (statut_adherent IN ('ACTIF','RETRAITE','RADIE')),
     parent_id BIGINT NULL REFERENCES visiteurs(id),
-    -- Autres champs selon vos entités
     affectation NVARCHAR(255) NULL,
     grade NVARCHAR(255) NULL,
     lien_parente NVARCHAR(255) NULL,
@@ -84,6 +87,15 @@ CREATE TABLE affectation_fonctionnaires (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     service_id BIGINT NOT NULL REFERENCES services(id),
     fonctionnaire_id BIGINT NOT NULL REFERENCES utilisateurs(id),
+    priorite INT NOT NULL DEFAULT 1,
+    actif BIT NOT NULL DEFAULT 1
+);
+
+CREATE TABLE motif_affectation (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    objet_visite_id BIGINT NOT NULL REFERENCES objet_visite(id),
+    fonctionnaire_id BIGINT NOT NULL REFERENCES utilisateurs(id),
+    type_affectation NVARCHAR(50) NULL,
     priorite INT NOT NULL DEFAULT 1,
     actif BIT NOT NULL DEFAULT 1
 );
