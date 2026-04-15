@@ -54,6 +54,11 @@ public class Utilisateur {
     @Builder.Default
     private boolean actif = true;
 
+    /** DISPONIBLE | EN_PAUSE | REUNION */
+    @Column(name = "statut_presence")
+    @Builder.Default
+    private String statutPresence = "DISPONIBLE";
+
     @CreatedDate
     private LocalDateTime dateCreation;
 

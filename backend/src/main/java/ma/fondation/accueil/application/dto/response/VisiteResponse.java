@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data @Builder
 public class VisiteResponse {
     private Long id;
+    private Long visiteurId;
     private String visiteurNom;
     private String typeVisiteur; // ADHERENT, CONJOINT, etc.
     private String lienParente;  // EPOUSE, FILS, etc.

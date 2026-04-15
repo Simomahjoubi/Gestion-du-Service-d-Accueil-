@@ -1,15 +1,15 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { 
-  LogOut, 
-  Home, 
-  UserPlus, 
-  Key, 
-  Search, 
+import {
+  LogOut,
+  Home,
+  UserPlus,
+  Key,
+  Search,
   Menu,
   User,
-  Bell
+  Bell,
 } from 'lucide-react';
 
 export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -50,11 +50,11 @@ export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               active={isActive('/agent/nouvelle-visite')} 
               onClick={() => navigate('/agent/nouvelle-visite')} 
             />
-            <NavItem 
-              icon={<Key size={16}/>} 
-              label="Restitution Badge" 
-              active={isActive('/agent/restitution')} 
-              onClick={() => navigate('/agent/restitution')} 
+            <NavItem
+              icon={<Key size={16}/>}
+              label="Restitution Badge"
+              active={isActive('/agent/restitution')}
+              onClick={() => navigate('/agent/restitution')}
             />
           </nav>
         </div>

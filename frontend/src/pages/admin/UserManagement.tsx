@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { adminService, UserDetail } from '../../services/adminService';
 import { serviceService, Service } from '../../services/serviceService';
+import { referenceService } from '../../services/referenceService';
 import { UserPlus, Check, X, Shield, Edit2, Trash2 } from 'lucide-react';
 
 export const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<UserDetail[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
@@ -26,7 +28,10 @@ export const UserManagement: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [u, s] = await Promise.all([adminService.getUsers(), serviceService.getAll()]);
+      const [u, s] = await Promise.all([
+        adminService.getUsers(),
+        serviceService.getAll(),
+      ]);
       setUsers(u);
       setServices(s);
       setError(null);
@@ -34,6 +39,10 @@ export const UserManagement: React.FC = () => {
       console.error("API Error:", err);
       setError("Erreur de chargement des données");
     }
+    // Chargement des rôles séparé pour ne pas bloquer la page
+    referenceService.getByCategorie('ROLE')
+      .then(refs => setRoles(refs.map(r => r.valeur)))
+      .catch(() => setRoles(['AGENT','FONCTIONNAIRE','RESPONSABLE','DIRECTEUR','ADMIN']));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -246,11 +255,7 @@ export const UserManagement: React.FC = () => {
                       });
                     }}
                   >
-                    <option value="AGENT">AGENT</option>
-                    <option value="FONCTIONNAIRE">FONCTIONNAIRE</option>
-                    <option value="RESPONSABLE">RESPONSABLE</option>
-                    <option value="DIRECTEUR">DIRECTEUR</option>
-                    <option value="ADMIN">ADMIN</option>
+                    {roles.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 <div>

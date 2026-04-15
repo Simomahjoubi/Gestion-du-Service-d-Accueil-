@@ -31,6 +31,11 @@ export const visiteService = {
     return response.data;
   },
 
+  getVisitesTodayByFonctionnaire: async (id: number) => {
+    const response = await api.get(`/visites/fonctionnaire/${id}/today`);
+    return response.data;
+  },
+
   recevoir: async (id: number) => {
     const response = await api.post(`/visites/${id}/recevoir`);
     return response.data;

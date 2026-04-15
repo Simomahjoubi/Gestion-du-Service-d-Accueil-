@@ -13,6 +13,7 @@ public interface VisiteurRepository extends JpaRepository<Visiteur, Long> {
 
     Optional<Visiteur> findByCin(String cin);
     Optional<Visiteur> findByNumAdhesion(String numAdhesion);
+    List<Visiteur> findByParentId(Long parentId);
 
     /** Recherche + filtres combinés (tous les paramètres sont optionnels / nullables) */
     @Query("SELECT v FROM Visiteur v WHERE " +

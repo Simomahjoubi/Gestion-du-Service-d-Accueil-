@@ -1,35 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { visiteurService, Visiteur } from '../../services/visiteurService';
+import { referenceService } from '../../services/referenceService';
 import {
   Plus, Search, Pencil, Trash2, Upload, X, Check,
   Download, ChevronDown, UserSearch, Users, UserPlus, Save, SlidersHorizontal,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-// ─── Référentiels ────────────────────────────────────────────────────────────
-const TYPES       = ['ADHERENT','CONJOINT','ENFANT','PARTENAIRE','MEDECIN','VIP','EXTERNE'];
-const STATUTS     = ['ACTIF','RETRAITE','RADIE'];
-const SEXES       = ['MONSIEUR','MADAME','MADEMOISELLE'];
-const SITUATIONS  = ['CELIBATAIRE','MARIE','VEUF'];
-const TYPE_DETAIL = ['Budget Général','Budget Communal','Protection Civile','DGST','Agent d\'autorité','Auxiliaire d\'autorité'];
-const GRADES      = ['Echelle 6-9','Administrateur Adjoint','Administrateur 2ème grade','Caïd','Khalifa','Bacha','Gouverneur','Wali'];
-const ASSURANCES  = ['MI','MI/FH2','Non assuré'];
+// ─── Référentiels statiques (non configurables) ───────────────────────────────
+const SEXES = ['MONSIEUR','MADAME','MADEMOISELLE'];
 
-const VILLES_MAROC = [
-  'Rabat','Salé','Témara','Casablanca','Mohammedia','Berrechid','Settat','Médiouna',
-  'Marrakech','Agadir','Inezgane','Aït Melloul','Tiznit','Taroudant','Ouarzazate','Zagora',
-  'Fès','Meknès','Ifrane','Sefrou','Azrou','Khénifra',
-  'Tanger','Tétouan','Chefchaouen','Al Hoceima','Larache','Ksar El Kebir','Asilah',
-  'Oujda','Nador','Berkane','Taourirt','Guercif','Jerada',
-  'Kénitra','Khémisset','Sidi Kacem','Sidi Slimane',
-  'El Jadida','Safi','Essaouira','Azemmour',
-  'Béni Mellal','Khouribga','Fquih Ben Salah','Azilal',
-  'Guelmim','Tan Tan','Sidi Ifni','Assa',
-  'Laâyoune','Boujdour','Smara',
-  'Dakhla','Aousserd',
-  'Errachidia','Midelt','Rich',
-  'Taza','Taounate','Guercif',
-].sort();
 
 const IS_ADHERENT = (t: string) => t === 'ADHERENT';
 const IS_FAMILY   = (t: string) => t === 'CONJOINT' || t === 'ENFANT';
@@ -116,8 +96,30 @@ export const AdherentManagement: React.FC = () => {
   const [parentFound, setParentFound]             = useState<Visiteur|null>(null);
   const [parentSearchError, setParentSearchError] = useState('');
 
+  // ── Références dynamiques ───────────────────────────────────────────────────
+  const [TYPES,       setTYPES]       = useState<string[]>([]);
+  const [STATUTS,     setSTATUTS]     = useState<string[]>([]);
+  const [SITUATIONS,  setSITUATIONS]  = useState<string[]>([]);
+  const [TYPE_DETAIL, setTYPE_DETAIL] = useState<string[]>([]);
+  const [GRADES,      setGRADES]      = useState<string[]>([]);
+  const [ASSURANCES,  setASSURANCES]  = useState<string[]>([]);
+  const [VILLES_MAROC,setVILLES]      = useState<string[]>([]);
+
   const fileRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    load();
+    referenceService.getAll().then(refs => {
+      const vals = (cat: keyof typeof refs) => refs[cat]?.map(r => r.valeur) ?? [];
+      setTYPES(vals('TYPE_ADHERENT'));
+      setSTATUTS(vals('STATUT'));
+      setSITUATIONS(vals('SITUATION_FAMILIALE'));
+      setTYPE_DETAIL(vals('TYPE_DETAIL'));
+      setGRADES(vals('GRADE'));
+      setASSURANCES(vals('TYPE_ASSURANCE'));
+      setVILLES(vals('AFFECTATION'));
+    }).catch(() => {/* silencieux — les dropdowns resteront vides */});
+  }, []);
 
   const load = async (f?: Filters) => {
     setLoading(true);

@@ -17,7 +17,7 @@ export const LoginPage: React.FC = () => {
       setAuth({ username: 'agent_user', nomComplet: 'Agent Accueil', role: 'AGENT' }, 'mock-token');
       navigate('/agent');
     } else if (username === 'staff') {
-      setAuth({ username: 'staff_user', nomComplet: 'Fonctionnaire 1', role: 'FONCTIONNAIRE', serviceId: 1 }, 'mock-token');
+      setAuth({ id: 1, username: 'ahmed.benali', nomComplet: 'Ahmed Benali', role: 'FONCTIONNAIRE', serviceId: 1, serviceNom: 'simo' }, 'mock-token');
       navigate('/fonctionnaire');
     } else if (username === 'admin') {
       setAuth({ username: 'admin_user', nomComplet: 'Administrateur Système', role: 'ADMIN' }, 'mock-token');

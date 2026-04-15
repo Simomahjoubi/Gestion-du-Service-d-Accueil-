@@ -30,4 +30,7 @@ public interface VisiteRepository extends JpaRepository<Visite, Long> {
 
     @Query("SELECT v FROM Visite v WHERE v.heureArrivee >= :debut ORDER BY v.heureArrivee DESC")
     List<Visite> findAllToday(@Param("debut") LocalDateTime debut);
+
+    @Query("SELECT v FROM Visite v WHERE v.fonctionnaire.id = :id AND v.heureArrivee >= :debut ORDER BY v.heureArrivee DESC")
+    List<Visite> findTodayByFonctionnaireId(@Param("id") Long id, @Param("debut") LocalDateTime debut);
 }

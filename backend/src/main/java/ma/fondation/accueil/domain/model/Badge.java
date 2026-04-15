@@ -22,4 +22,9 @@ public class Badge {
     private StatutBadge statut = StatutBadge.DISPONIBLE;
 
     private Long visiteCouranteId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "service_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private ServiceEntity service;
 }

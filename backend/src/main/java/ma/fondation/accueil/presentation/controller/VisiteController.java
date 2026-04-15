@@ -95,6 +95,7 @@ public class VisiteController {
         Visiteur v = visite.getVisiteur();
         return VisiteResponse.builder()
                 .id(visite.getId())
+                .visiteurId(v.getId())
                 .visiteurNom(v.getNom() + " " + v.getPrenom())
                 .typeVisiteur(v.getType().name())
                 .lienParente(v.getLienParente())
@@ -103,11 +104,11 @@ public class VisiteController {
                 .grade(v.getGrade())
                 .typeAssurance(v.getTypeAssurance())
                 .fonctionnaireNom(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getNomComplet() : "Non assigné")
-                .badgeCode(visite.getBadge().getCode())
+                .badgeCode(visite.getBadge() != null ? visite.getBadge().getCode() : "—")
                 .statut(visite.getStatut())
                 .heureArrivee(visite.getHeureArrivee())
-                .motifLibelle(visite.getObjetVisite().getLibelleFr())
-                .serviceNom(visite.getService().getNom())
+                .motifLibelle(visite.getObjetVisite() != null ? visite.getObjetVisite().getLibelleFr() : "—")
+                .serviceNom(visite.getService() != null ? visite.getService().getNom() : "—")
                 .build();
     }
 
@@ -121,6 +122,13 @@ public class VisiteController {
     public ResponseEntity<String> cloturerVisite(@PathVariable Long id) {
         visiteService.cloturerVisite(id);
         return ResponseEntity.ok("Visite terminée. Badge en attente de restitution.");
+    }
+
+    @GetMapping("/fonctionnaire/{id}/today")
+    public ResponseEntity<List<VisiteResponse>> getVisitesTodayByFonctionnaire(@PathVariable Long id) {
+        LocalDateTime debut = LocalDate.now().atStartOfDay();
+        return ResponseEntity.ok(visiteRepo.findTodayByFonctionnaireId(id, debut)
+                .stream().map(this::mapToResponse).collect(Collectors.toList()));
     }
 
     @PostMapping("/restituer-badge")

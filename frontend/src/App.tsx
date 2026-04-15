@@ -14,6 +14,8 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdherentManagement } from './pages/admin/AdherentManagement';
 import { UserManagement } from './pages/admin/UserManagement';
 import { ServiceMotifManagement } from './pages/admin/ServiceMotifManagement';
+import { ReferencesManagement } from './pages/admin/ReferencesManagement';
+import { BadgeManagement } from './pages/admin/BadgeManagement';
 import { ResponsableDashboard } from './pages/responsable/ResponsableDashboard';
 import { DirecteurDashboard } from './pages/directeur/DirecteurDashboard';
 import { MainLayout } from './layouts/MainLayout';
@@ -44,6 +46,8 @@ export const App: React.FC = () => {
             <Route path="adherents" element={<AdherentManagement />} />
             <Route path="comptes" element={<UserManagement />} />
             <Route path="services" element={<ServiceMotifManagement />} />
+            <Route path="badges" element={<BadgeManagement />} />
+            <Route path="references" element={<ReferencesManagement />} />
           </Route>
         </Route>
 

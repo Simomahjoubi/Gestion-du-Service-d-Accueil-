@@ -2,10 +2,13 @@ package ma.fondation.accueil.presentation.controller;
 
 import lombok.RequiredArgsConstructor;
 import ma.fondation.accueil.application.dto.response.VisiteurResponse;
+import ma.fondation.accueil.domain.enums.TypeVisiteur;
 import ma.fondation.accueil.domain.model.Visiteur;
 import ma.fondation.accueil.infrastructure.persistence.repository.VisiteurRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +43,26 @@ public class VisiteurController {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(visiteurs);
+    }
+
+    /** Dossier complet : visiteur + adhérent parent (si conjoint/enfant) + famille */
+    @GetMapping("/{id}/dossier")
+    public ResponseEntity<Map<String, Object>> getDossier(@PathVariable Long id) {
+        return visiteurRepo.findById(id).map(visiteur -> {
+            Map<String, Object> dossier = new HashMap<>();
+            dossier.put("visiteur", mapToResponse(visiteur));
+
+            Visiteur adherent = (visiteur.getType() == TypeVisiteur.ADHERENT)
+                    ? visiteur
+                    : visiteur.getParent();
+
+            if (adherent != null) {
+                dossier.put("adherent", mapToResponse(adherent));
+                dossier.put("famille", visiteurRepo.findByParentId(adherent.getId())
+                        .stream().map(this::mapToResponse).toList());
+            }
+            return ResponseEntity.ok(dossier);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     private VisiteurResponse mapToResponse(Visiteur v) {

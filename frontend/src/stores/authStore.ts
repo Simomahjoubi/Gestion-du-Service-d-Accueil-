@@ -2,10 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface User {
+  id?: number;
   username: string;
   nomComplet: string;
   role: 'AGENT' | 'FONCTIONNAIRE' | 'RESPONSABLE' | 'ADMIN' | 'DIRECTEUR';
   serviceId?: number;
+  serviceNom?: string;
 }
 
 interface AuthState {

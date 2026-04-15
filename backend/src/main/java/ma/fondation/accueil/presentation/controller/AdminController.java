@@ -10,11 +10,13 @@ import ma.fondation.accueil.domain.enums.TypeAffectationMotif;
 import ma.fondation.accueil.domain.enums.TypeVisiteur;
 import ma.fondation.accueil.domain.model.MotifAffectation;
 import ma.fondation.accueil.domain.model.ObjetVisite;
+import ma.fondation.accueil.domain.model.ReferenceItem;
 import ma.fondation.accueil.domain.model.ServiceEntity;
 import ma.fondation.accueil.domain.model.Utilisateur;
 import ma.fondation.accueil.domain.model.Visiteur;
 import ma.fondation.accueil.infrastructure.persistence.repository.MotifAffectationRepository;
 import ma.fondation.accueil.infrastructure.persistence.repository.ObjetVisiteRepository;
+import ma.fondation.accueil.infrastructure.persistence.repository.ReferenceItemRepository;
 import ma.fondation.accueil.infrastructure.persistence.repository.ServiceRepository;
 import ma.fondation.accueil.infrastructure.persistence.repository.UtilisateurRepository;
 import ma.fondation.accueil.infrastructure.persistence.repository.VisiteurRepository;
@@ -34,6 +36,7 @@ public class AdminController {
     private final ObjetVisiteRepository motifRepo;
     private final MotifAffectationRepository motifAffectationRepo;
     private final VisiteurRepository visiteurRepo;
+    private final ReferenceItemRepository referenceRepo;
     // Assuming BCryptPasswordEncoder is available or should be used for security
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
@@ -231,6 +234,18 @@ public class AdminController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/users/{id}/statut-presence")
+    public ResponseEntity<?> updateStatutPresence(@PathVariable Long id,
+                                                  @RequestBody java.util.Map<String, String> body) {
+        String statut = body.get("statut");
+        if (statut == null || !java.util.List.of("DISPONIBLE","EN_PAUSE","REUNION").contains(statut))
+            return ResponseEntity.badRequest().body(java.util.Map.of("error","Statut invalide."));
+        return utilisateurRepo.findById(id).map(u -> {
+            u.setStatutPresence(statut);
+            return ResponseEntity.ok(utilisateurRepo.save(u));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (utilisateurRepo.existsById(id)) {
@@ -397,5 +412,64 @@ public class AdminController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    // --- GESTION DES RÉFÉRENCES ---
+
+    @GetMapping("/references")
+    public List<ReferenceItem> getReferences(@RequestParam String categorie) {
+        return referenceRepo.findByCategorieOrderByOrdreAscValeurAsc(categorie);
+    }
+
+    @GetMapping("/references/all")
+    public java.util.Map<String, List<ReferenceItem>> getAllReferences() {
+        List<String> categories = List.of(
+                "TYPE_ADHERENT", "SITUATION_FAMILIALE", "STATUT",
+                "TYPE_DETAIL", "GRADE", "TYPE_ASSURANCE",
+                "AFFECTATION", "ROLE");
+        java.util.Map<String, List<ReferenceItem>> result = new java.util.LinkedHashMap<>();
+        for (String cat : categories) {
+            result.put(cat, referenceRepo.findByCategorieOrderByOrdreAscValeurAsc(cat));
+        }
+        return result;
+    }
+
+    @PostMapping("/references")
+    public ResponseEntity<?> createReference(@RequestBody java.util.Map<String, Object> data) {
+        String categorie = str(data, "categorie");
+        String valeur    = str(data, "valeur");
+        if (categorie == null || valeur == null)
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", "Catégorie et valeur sont obligatoires."));
+        if (referenceRepo.existsByCategorieAndValeur(categorie, valeur))
+            return ResponseEntity.status(409).body(java.util.Map.of("error", "Cette valeur existe déjà dans cette catégorie."));
+        int ordre = data.get("ordre") != null ? Integer.parseInt(data.get("ordre").toString()) : 0;
+        String description = str(data, "description");
+        ReferenceItem saved = referenceRepo.save(ReferenceItem.builder()
+                .categorie(categorie).valeur(valeur).ordre(ordre).description(description).build());
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/references/{id}")
+    public ResponseEntity<?> updateReference(@PathVariable Long id,
+                                             @RequestBody java.util.Map<String, Object> data) {
+        return referenceRepo.findById(id).map(item -> {
+            String valeur = str(data, "valeur");
+            if (valeur == null)
+                return ResponseEntity.<Object>badRequest().body(java.util.Map.of("error", "La valeur est obligatoire."));
+            if (referenceRepo.existsByCategorieAndValeurAndIdNot(item.getCategorie(), valeur, id))
+                return ResponseEntity.<Object>status(409).body(java.util.Map.of("error", "Cette valeur existe déjà dans cette catégorie."));
+            item.setValeur(valeur);
+            item.setDescription(str(data, "description"));
+            if (data.get("ordre") != null)
+                item.setOrdre(Integer.parseInt(data.get("ordre").toString()));
+            return ResponseEntity.<Object>ok(referenceRepo.save(item));
+        }).orElse(ResponseEntity.<Object>notFound().build());
+    }
+
+    @DeleteMapping("/references/{id}")
+    public ResponseEntity<Void> deleteReference(@PathVariable Long id) {
+        if (!referenceRepo.existsById(id)) return ResponseEntity.notFound().build();
+        referenceRepo.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

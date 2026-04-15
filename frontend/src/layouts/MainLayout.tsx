@@ -1,21 +1,36 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { 
-  LogOut, 
-  Home, 
-  Users,  
-  Search, 
-  ChevronDown, 
+import {
+  LogOut,
+  Home,
+  Users,
+  Search,
+  ChevronDown,
   Menu,
   LayoutGrid,
-  UserCog
+  UserCog,
+  BookOpen,
+  BadgeCheck,
 } from 'lucide-react';
+import { CATEGORIE_LABELS, ALL_CATEGORIES, ReferenceCategorie } from '../services/referenceService';
 
 export const MainLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [refOpen, setRefOpen] = useState(false);
+  const refRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (refRef.current && !refRef.current.contains(e.target as Node)) {
+        setRefOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -40,6 +55,39 @@ export const MainLayout: React.FC = () => {
             <NavItem icon={<Users size={16}/>} label="Adhérents" active={location.pathname === '/admin/adherents'} onClick={() => navigate('/admin/adherents')} />
             <NavItem icon={<UserCog size={16}/>} label="Comptes" active={location.pathname === '/admin/comptes'} onClick={() => navigate('/admin/comptes')} />
             <NavItem icon={<LayoutGrid size={16}/>} label="Services & Motifs" active={location.pathname === '/admin/services'} onClick={() => navigate('/admin/services')} />
+            <NavItem icon={<BadgeCheck size={16}/>} label="Badges" active={location.pathname === '/admin/badges'} onClick={() => navigate('/admin/badges')} />
+
+            {/* Dropdown Références */}
+            <div ref={refRef} className="relative">
+              <div
+                onClick={() => setRefOpen(o => !o)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors ${
+                  location.pathname === '/admin/references'
+                    ? 'bg-gray-100 text-blue-700 font-bold'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <BookOpen size={16} />
+                <span className="text-[13px]">Références</span>
+                <ChevronDown size={12} className={`text-gray-400 transition-transform ${refOpen ? 'rotate-180' : ''}`} />
+              </div>
+              {refOpen && (
+                <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-md shadow-xl border border-gray-200 py-1 z-50">
+                  {ALL_CATEGORIES.map((cat: ReferenceCategorie) => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        navigate(`/admin/references?categorie=${cat}`);
+                        setRefOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    >
+                      {CATEGORIE_LABELS[cat]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
