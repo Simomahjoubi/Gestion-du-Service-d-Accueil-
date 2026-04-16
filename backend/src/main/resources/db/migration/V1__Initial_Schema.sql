@@ -19,8 +19,7 @@ CREATE TABLE utilisateurs (
     is_chef BIT NOT NULL DEFAULT 0,
     actif BIT NOT NULL DEFAULT 1,
     service_id BIGINT NULL REFERENCES services(id),
-    statut_presence NVARCHAR(50) NOT NULL DEFAULT 'DISPONIBLE'
-                        CHECK (statut_presence IN ('DISPONIBLE','EN_PAUSE','REUNION')),
+    statut_presence NVARCHAR(50) NOT NULL DEFAULT 'HORS_LIGNE',
     date_creation DATETIME2 NULL,
     date_modification DATETIME2 NULL
 );
@@ -97,12 +96,11 @@ CREATE TABLE affectation_fonctionnaires (
 );
 
 CREATE TABLE motif_affectation (
-    id BIGINT IDENTITY(1,1) PRIMARY KEY,
-    objet_visite_id BIGINT NOT NULL REFERENCES objet_visite(id),
-    fonctionnaire_id BIGINT NOT NULL REFERENCES utilisateurs(id),
-    type_affectation NVARCHAR(50) NULL,
-    priorite INT NOT NULL DEFAULT 1,
-    actif BIT NOT NULL DEFAULT 1
+    id         BIGINT IDENTITY(1,1) PRIMARY KEY,
+    motif_id   BIGINT NOT NULL REFERENCES objet_visite(id),
+    utilisateur_id BIGINT NOT NULL REFERENCES utilisateurs(id),
+    priorite   INT NOT NULL DEFAULT 1,
+    CONSTRAINT uq_motif_priorite UNIQUE (motif_id, priorite)
 );
 
 -- ─── Références configurables ────────────────────────────────────────────────
@@ -173,6 +171,14 @@ INSERT INTO reference_items (categorie, valeur, ordre) VALUES
     ('ROLE', 'DIRECTEUR',    3),
     ('ROLE', 'ADMIN',        4);
 
+-- Statut de présence
+INSERT INTO reference_items (categorie, valeur, ordre) VALUES
+    ('STATUT_PRESENCE', 'EN_LIGNE',    0),
+    ('STATUT_PRESENCE', 'EN_PAUSE',    1),
+    ('STATUT_PRESENCE', 'REUNION',     2),
+    ('STATUT_PRESENCE', 'CONGE',       3),
+    ('STATUT_PRESENCE', 'HORS_LIGNE',  4);
+
 -- Affectation (villes du Maroc)
 INSERT INTO reference_items (categorie, valeur, ordre) VALUES
     ('AFFECTATION', 'Rabat',          0),
@@ -236,6 +242,14 @@ INSERT INTO reference_items (categorie, valeur, ordre) VALUES
     ('AFFECTATION', 'Rich',           58),
     ('AFFECTATION', 'Taza',           59),
     ('AFFECTATION', 'Taounate',       60);
+
+-- ─── Compte administrateur par défaut ───────────────────────────────────────
+-- login: admin / password: admin (BCrypt)
+INSERT INTO utilisateurs (username, nom_complet, password, role, is_chef, actif, statut_presence)
+SELECT 'admin', 'Administrateur Système',
+       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+       'ADMIN', 0, 1, 'HORS_LIGNE'
+WHERE NOT EXISTS (SELECT 1 FROM utilisateurs WHERE username = 'admin');
 
 -- ─── Services initiaux ───────────────────────────────────────────────────────
 -- (décommenter pour un bootstrap complet avec données de démo)

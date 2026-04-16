@@ -8,7 +8,8 @@ export type ReferenceCategorie =
   | 'GRADE'
   | 'TYPE_ASSURANCE'
   | 'AFFECTATION'
-  | 'ROLE';
+  | 'ROLE'
+  | 'STATUT_PRESENCE';
 
 export interface ReferenceItem {
   id: number;
@@ -21,12 +22,13 @@ export interface ReferenceItem {
 export const CATEGORIE_LABELS: Record<ReferenceCategorie, string> = {
   TYPE_ADHERENT:       "Type de l'adhérent",
   SITUATION_FAMILIALE: 'Situation familiale',
-  STATUT:              'Statut',
+  STATUT:              'Statut adhérent',
   TYPE_DETAIL:         'Type adhérent détail',
   GRADE:               'Grade',
   TYPE_ASSURANCE:      'Type assurance',
   AFFECTATION:         'Affectation',
   ROLE:                'Rôle',
+  STATUT_PRESENCE:     'Statut de présence',
 };
 
 export const ALL_CATEGORIES: ReferenceCategorie[] = [
@@ -38,6 +40,7 @@ export const ALL_CATEGORIES: ReferenceCategorie[] = [
   'TYPE_ASSURANCE',
   'AFFECTATION',
   'ROLE',
+  'STATUT_PRESENCE',
 ];
 
 export const referenceService = {

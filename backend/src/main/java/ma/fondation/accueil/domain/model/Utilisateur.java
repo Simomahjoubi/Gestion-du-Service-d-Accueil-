@@ -54,10 +54,10 @@ public class Utilisateur {
     @Builder.Default
     private boolean actif = true;
 
-    /** DISPONIBLE | EN_PAUSE | REUNION */
+    /** EN_LIGNE | EN_PAUSE | REUNION | CONGE | HORS_LIGNE */
     @Column(name = "statut_presence")
     @Builder.Default
-    private String statutPresence = "DISPONIBLE";
+    private String statutPresence = "HORS_LIGNE";
 
     @CreatedDate
     private LocalDateTime dateCreation;

@@ -35,6 +35,7 @@ export interface UserDetail {
   serviceId?: number;
   actif: boolean;
   motifsGeres?: Motif[];
+  statutPresence?: string;
 }
 
 export const adminService = {
