@@ -3,62 +3,167 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useWebSocket } from '../hooks/useWebSocket';
 import {
-  LogOut, Bell, User, Menu, ChevronDown,
-  Circle, Coffee, Users,
+  LogOut, Bell, User, Menu, Coffee, Users, Calendar, Wifi, WifiOff, X, Activity,
 } from 'lucide-react';
 import api from '../services/api';
+import { referenceService } from '../services/referenceService';
 
-const STATUTS = [
-  { key: 'DISPONIBLE', label: 'Disponible',  icon: <Circle size={10} className="fill-emerald-500 text-emerald-500"/>, dot: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-  { key: 'EN_PAUSE',   label: 'En pause',    icon: <Coffee   size={10} className="text-amber-500"/>,                  dot: 'bg-amber-400',  text: 'text-amber-700',  bg: 'bg-amber-50  border-amber-200'  },
-  { key: 'REUNION',    label: 'Réunion',     icon: <Users    size={10} className="text-rose-500"/>,                   dot: 'bg-rose-500',   text: 'text-rose-700',   bg: 'bg-rose-50   border-rose-200'   },
+// ─── Config statique pour statuts connus ─────────────────────────────────────
+const KNOWN_STATUTS: Record<string, {
+  label: string; desc: string; icon: React.ReactNode;
+  dot: string; text: string; bg: string; card: string;
+}> = {
+  EN_PAUSE: {
+    label: 'En pause', desc: 'Pause courte',
+    icon: <Coffee size={22} className="text-amber-500" />,
+    dot: 'bg-amber-400', text: 'text-amber-700',
+    bg: 'bg-amber-50 border-amber-200',
+    card: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50',
+  },
+  REUNION: {
+    label: 'Réunion', desc: 'En réunion de service',
+    icon: <Users size={22} className="text-rose-500" />,
+    dot: 'bg-rose-500', text: 'text-rose-700',
+    bg: 'bg-rose-50 border-rose-200',
+    card: 'border-rose-200 hover:border-rose-400 hover:bg-rose-50',
+  },
+  CONGE: {
+    label: 'Congé', desc: 'Absent / en congé',
+    icon: <Calendar size={22} className="text-gray-400" />,
+    dot: 'bg-gray-400', text: 'text-gray-600',
+    bg: 'bg-gray-50 border-gray-200',
+    card: 'border-gray-200 hover:border-gray-400 hover:bg-gray-50',
+  },
+};
+
+const EN_LIGNE_CFG = {
+  dot: 'bg-emerald-500',
+  text: 'text-emerald-700',
+  bg: 'bg-emerald-50 border-emerald-200',
+  label: 'En ligne',
+};
+
+const HORS_LIGNE_CFG = {
+  dot: 'bg-gray-400',
+  text: 'text-gray-600',
+  bg: 'bg-gray-50 border-gray-200',
+  label: 'Hors ligne',
+};
+
+interface PresenceReason {
+  key: string;
+  label: string;
+  desc: string;
+  icon: React.ReactNode;
+  dot: string;
+  text: string;
+  bg: string;
+  card: string;
+}
+
+const FALLBACK_REASONS: PresenceReason[] = [
+  { key: 'EN_PAUSE', ...KNOWN_STATUTS.EN_PAUSE },
+  { key: 'REUNION', ...KNOWN_STATUTS.REUNION },
+  { key: 'CONGE',   ...KNOWN_STATUTS.CONGE   },
 ];
 
+// ─── Component ────────────────────────────────────────────────────────────────
 export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   useWebSocket();
 
-  const [statut, setStatut]         = useState('DISPONIBLE');
-  const [statutOpen, setStatutOpen] = useState(false);
-  const statutRef                   = useRef<HTMLDivElement>(null);
+  const [statut, setStatut]                 = useState('HORS_LIGNE');
+  const [showModal, setShowModal]           = useState(false);
+  const [offlineReasons, setOfflineReasons] = useState<PresenceReason[]>(FALLBACK_REASONS);
+  const avatarRef                           = useRef<HTMLDivElement>(null);
 
-  // Load saved presence status on mount
+  // ── Charger les statuts depuis la référentielle ───────────────────────────
   useEffect(() => {
-    if (!user?.id) return;
-    api.get(`/admin/users`).then(res => {
-      const me = (res.data as any[]).find((u: any) => u.id === user.id);
-      if (me?.statutPresence) setStatut(me.statutPresence);
-    }).catch(() => {});
-  }, [user?.id]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const fn = (e: MouseEvent) => {
-      if (statutRef.current && !statutRef.current.contains(e.target as Node))
-        setStatutOpen(false);
-    };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
+    referenceService.getByCategorie('STATUT_PRESENCE')
+      .then(refs => {
+        const reasons: PresenceReason[] = refs
+          .filter(r => r.valeur !== 'EN_LIGNE' && r.valeur !== 'HORS_LIGNE')
+          .sort((a, b) => a.ordre - b.ordre)
+          .map(r => {
+            const known = KNOWN_STATUTS[r.valeur];
+            if (known) return { key: r.valeur, ...known };
+            // Statut personnalisé ajouté par l'administrateur
+            const label = r.description || r.valeur.replace(/_/g, ' ');
+            return {
+              key: r.valeur,
+              label,
+              desc: r.description || '',
+              icon: <Activity size={22} className="text-purple-500" />,
+              dot: 'bg-purple-400',
+              text: 'text-purple-700',
+              bg: 'bg-purple-50 border-purple-200',
+              card: 'border-purple-200 hover:border-purple-400 hover:bg-purple-50',
+            };
+          });
+        if (reasons.length > 0) setOfflineReasons(reasons);
+      })
+      .catch(() => {}); // garder le fallback en cas d'erreur
   }, []);
 
-  const handleStatut = async (key: string) => {
+  const getStatusCfg = (s: string) => {
+    if (s === 'EN_LIGNE')   return EN_LIGNE_CFG;
+    if (s === 'HORS_LIGNE') return HORS_LIGNE_CFG;
+    return offlineReasons.find(r => r.key === s) ?? HORS_LIGNE_CFG;
+  };
+
+  // ── Au montage : passer EN_LIGNE automatiquement ──────────────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    api.put(`/admin/users/${user.id}/statut-presence`, { statut: 'EN_LIGNE' })
+      .then(() => setStatut('EN_LIGNE'))
+      .catch(() => setStatut('EN_LIGNE')); // optimistic
+  }, [user?.id]);
+
+  // ── Passer hors ligne au fermeture/navigation (best-effort) ──────────────
+  useEffect(() => {
+    const handleUnload = () => {
+      if (user?.id) {
+        navigator.sendBeacon(`/api/admin/users/${user.id}/statut-presence`,
+          JSON.stringify({ statut: 'HORS_LIGNE' }));
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, [user?.id]);
+
+  const updateStatut = async (key: string) => {
+    if (!user?.id) return;
     setStatut(key);
-    setStatutOpen(false);
-    if (user?.id) {
-      await api.put(`/admin/users/${user.id}/statut-presence`, { statut: key }).catch(() => {});
+    setShowModal(false);
+    await api.put(`/admin/users/${user.id}/statut-presence`, { statut: key }).catch(() => {});
+  };
+
+  const handleStatusClick = () => {
+    if (statut === 'EN_LIGNE') {
+      setShowModal(true); // demander le motif
+    } else {
+      updateStatut('EN_LIGNE'); // retour direct en ligne
     }
   };
 
-  const current = STATUTS.find(s => s.key === statut) ?? STATUTS[0];
+  const handleLogout = async () => {
+    if (user?.id) {
+      await api.put(`/admin/users/${user.id}/statut-presence`, { statut: 'HORS_LIGNE' }).catch(() => {});
+    }
+    logout();
+    navigate('/login');
+  };
 
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const cfg = getStatusCfg(statut);
+  const isOnline = statut === 'EN_LIGNE';
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] font-sans flex flex-col">
+
       {/* ── Top navbar ── */}
       <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-50">
-        {/* Left: logo + nav */}
+        {/* Left */}
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/fonctionnaire')}>
             <Menu className="text-gray-500 mr-1" size={20} />
@@ -67,43 +172,28 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
               <span className="text-[10px] font-bold text-blue-700 uppercase">Hassan II</span>
             </div>
           </div>
-
-          {/* Service chip */}
           <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
-            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
             <span className="text-xs font-semibold text-blue-700">{user?.serviceNom ?? 'Mon Service'}</span>
           </div>
         </div>
 
-        {/* Right: status + bell + avatar */}
+        {/* Right */}
         <div className="flex items-center gap-3">
-          {/* ── Statut présence ── */}
-          <div ref={statutRef} className="relative">
-            <button
-              onClick={() => setStatutOpen(o => !o)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${current.bg} ${current.text}`}
-            >
-              <span className={`w-2 h-2 rounded-full ${current.dot} ${statut === 'DISPONIBLE' ? 'animate-pulse' : ''}`}/>
-              {current.label}
-              <ChevronDown size={12} className={`transition-transform ${statutOpen ? 'rotate-180' : ''}`}/>
-            </button>
 
-            {statutOpen && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50">
-                {STATUTS.map(s => (
-                  <button
-                    key={s.key}
-                    onClick={() => handleStatut(s.key)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium hover:bg-gray-50 transition-colors ${statut === s.key ? 'bg-gray-50' : ''}`}
-                  >
-                    <span className={`w-2.5 h-2.5 rounded-full ${s.dot}`}/>
-                    <span className={s.text}>{s.label}</span>
-                    {statut === s.key && <span className="ml-auto text-[10px] text-gray-400">✓</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* ── Bouton statut ── */}
+          <button
+            onClick={handleStatusClick}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${cfg.bg} ${cfg.text}`}
+            title={isOnline ? 'Cliquer pour passer hors ligne' : 'Cliquer pour revenir en ligne'}
+          >
+            <span className={`w-2 h-2 rounded-full ${cfg.dot} ${isOnline ? 'animate-pulse' : ''}`} />
+            {cfg.label}
+            {isOnline
+              ? <WifiOff size={12} className="ml-1 opacity-60" />
+              : <Wifi    size={12} className="ml-1 opacity-60" />
+            }
+          </button>
 
           {/* Bell */}
           <div className="relative cursor-pointer text-gray-400 hover:text-blue-600">
@@ -112,7 +202,7 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
           </div>
 
           {/* Avatar */}
-          <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+          <div ref={avatarRef} className="flex items-center gap-2 pl-3 border-l border-gray-200">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-gray-700 leading-tight">{user?.nomComplet}</p>
               <p className="text-[10px] text-gray-400">Fonctionnaire</p>
@@ -121,13 +211,13 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-400 rounded-full flex items-center justify-center text-white cursor-pointer border border-gray-200">
                 <User size={16} />
               </div>
-              <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-200 py-1 hidden group-hover:block">
+              <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-200 py-1 hidden group-hover:block z-50">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <p className="text-xs font-bold text-gray-800">{user?.nomComplet}</p>
                   <p className="text-[10px] text-gray-400">{user?.serviceNom}</p>
                 </div>
                 <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2">
-                  <LogOut size={13}/> Déconnexion
+                  <LogOut size={13} /> Déconnexion
                 </button>
               </div>
             </div>
@@ -138,6 +228,53 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+
+      {/* ── Modal motif hors ligne ── */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <p className="font-bold text-gray-800 text-base">Passer hors ligne</p>
+                <p className="text-xs text-gray-400 mt-0.5">Sélectionnez un motif d'absence</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-100 rounded-xl">
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Options — chargées dynamiquement depuis la référentielle */}
+            <div className="p-5 space-y-3">
+              {offlineReasons.map(r => (
+                <button
+                  key={r.key}
+                  onClick={() => updateStatut(r.key)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${r.card}`}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${r.bg}`}>
+                    {r.icon}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-bold ${r.text}`}>{r.label}</p>
+                    {r.desc && <p className="text-[11px] text-gray-400">{r.desc}</p>}
+                  </div>
+                  <span className={`ml-auto w-2.5 h-2.5 rounded-full ${r.dot}`} />
+                </button>
+              ))}
+            </div>
+
+            <div className="px-5 pb-5">
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full py-2.5 text-sm font-semibold text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

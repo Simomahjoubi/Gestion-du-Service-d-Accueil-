@@ -1,8 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { adminService, UserDetail } from '../../services/adminService';
 import { serviceService, Service } from '../../services/serviceService';
 import { referenceService } from '../../services/referenceService';
-import { UserPlus, Check, X, Shield, Edit2, Trash2 } from 'lucide-react';
+import { UserPlus, Check, X, Shield, Edit2, Trash2, Wifi, WifiOff, Coffee, Users, Calendar } from 'lucide-react';
+
+// ─── Présence badge ───────────────────────────────────────────────────────────
+const PRESENCE_CFG: Record<string, { label: string; dot: string; text: string; bg: string; icon: React.ReactNode }> = {
+  EN_LIGNE:    { label: 'En ligne',    dot: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50',  icon: <Wifi      size={11}/> },
+  EN_PAUSE:    { label: 'En pause',    dot: 'bg-amber-400',   text: 'text-amber-700',   bg: 'bg-amber-50',    icon: <Coffee    size={11}/> },
+  REUNION:     { label: 'Réunion',     dot: 'bg-rose-500',    text: 'text-rose-700',    bg: 'bg-rose-50',     icon: <Users     size={11}/> },
+  CONGE:       { label: 'Congé',       dot: 'bg-gray-400',    text: 'text-gray-500',    bg: 'bg-gray-100',    icon: <Calendar  size={11}/> },
+  HORS_LIGNE:  { label: 'Hors ligne',  dot: 'bg-gray-300',    text: 'text-gray-400',    bg: 'bg-gray-50',     icon: <WifiOff   size={11}/> },
+};
+
+const PresenceBadge: React.FC<{ statut?: string }> = ({ statut }) => {
+  const cfg = PRESENCE_CFG[statut ?? 'HORS_LIGNE'] ?? PRESENCE_CFG.HORS_LIGNE;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${cfg.bg} ${cfg.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${statut === 'EN_LIGNE' ? 'animate-pulse' : ''}`} />
+      {cfg.icon}
+      {cfg.label}
+    </span>
+  );
+};
 
 export const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<UserDetail[]>([]);
@@ -11,6 +31,7 @@ export const UserManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserDetail | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [newUser, setNewUser] = useState<any>({
     username: '',
@@ -24,6 +45,11 @@ export const UserManagement: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // Rafraîchissement auto toutes les 15s pour voir les statuts en temps réel
+    intervalRef.current = setInterval(() => {
+      adminService.getUsers().then(u => setUsers(u)).catch(() => {});
+    }, 15000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
   const loadData = async () => {
@@ -126,7 +152,8 @@ export const UserManagement: React.FC = () => {
               <th className="px-6 py-4">Utilisateur</th>
               <th className="px-6 py-4">Rôle</th>
               <th className="px-6 py-4">Service</th>
-              <th className="px-6 py-4">Statut</th>
+              <th className="px-6 py-4">Compte</th>
+              <th className="px-6 py-4">Présence</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -135,8 +162,12 @@ export const UserManagement: React.FC = () => {
               <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center text-xs font-bold uppercase">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold uppercase text-white relative
+                      ${user.statutPresence === 'EN_LIGNE' ? 'bg-emerald-600' : 'bg-slate-600'}`}>
                       {user.username.substring(0, 2)}
+                      {/* dot de présence */}
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white
+                        ${user.statutPresence === 'EN_LIGNE' ? 'bg-emerald-500' : 'bg-gray-400'}`} />
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-800">{user.nomComplet}</p>
@@ -153,21 +184,24 @@ export const UserManagement: React.FC = () => {
                   {user.service?.nom || <span className="text-gray-300 italic">Non assigné</span>}
                 </td>
                 <td className="px-6 py-4">
-                  {user.actif ? 
-                    <span className="flex items-center gap-1 text-green-600 text-xs font-bold"><Check size={14}/> Actif</span> :
-                    <span className="flex items-center gap-1 text-red-400 text-xs font-bold"><X size={14}/> Inactif</span>
+                  {user.actif
+                    ? <span className="flex items-center gap-1 text-green-600 text-xs font-bold"><Check size={14}/> Actif</span>
+                    : <span className="flex items-center gap-1 text-red-400 text-xs font-bold"><X size={14}/> Inactif</span>
                   }
+                </td>
+                <td className="px-6 py-4">
+                  <PresenceBadge statut={user.statutPresence} />
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <button 
+                    <button
                       onClick={() => openEditModal(user)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title="Modifier"
                     >
                       <Edit2 size={16} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => user.id && handleDelete(user.id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Supprimer"
@@ -223,21 +257,33 @@ export const UserManagement: React.FC = () => {
                   onChange={e => setNewUser({...newUser, password: e.target.value})}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox"
-                  checked={newUser.isChef}
-                  onChange={e => {
-                    const isChef = e.target.checked;
-                    const needsService = newUser.role === 'FONCTIONNAIRE' || newUser.role === 'RESPONSABLE' || isChef;
-                    setNewUser({
-                      ...newUser, 
-                      isChef: isChef,
-                      serviceId: needsService ? newUser.serviceId : undefined
-                    });
-                  }}
-                />
-                <label className="text-sm font-bold text-gray-700">Chef de service</label>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isChef"
+                    checked={newUser.isChef}
+                    onChange={e => {
+                      const isChef = e.target.checked;
+                      const needsService = newUser.role === 'FONCTIONNAIRE' || newUser.role === 'RESPONSABLE' || isChef;
+                      setNewUser({
+                        ...newUser,
+                        isChef: isChef,
+                        serviceId: needsService ? newUser.serviceId : undefined
+                      });
+                    }}
+                  />
+                  <label htmlFor="isChef" className="text-sm font-bold text-gray-700">Chef de service</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="actif"
+                    checked={newUser.actif}
+                    onChange={e => setNewUser({ ...newUser, actif: e.target.checked })}
+                  />
+                  <label htmlFor="actif" className="text-sm font-bold text-gray-700">Compte actif</label>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

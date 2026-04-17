@@ -238,7 +238,7 @@ public class AdminController {
     public ResponseEntity<?> updateStatutPresence(@PathVariable Long id,
                                                   @RequestBody java.util.Map<String, String> body) {
         String statut = body.get("statut");
-        if (statut == null || !java.util.List.of("DISPONIBLE","EN_PAUSE","REUNION").contains(statut))
+        if (statut == null || statut.isBlank())
             return ResponseEntity.badRequest().body(java.util.Map.of("error","Statut invalide."));
         return utilisateurRepo.findById(id).map(u -> {
             u.setStatutPresence(statut);
@@ -426,7 +426,7 @@ public class AdminController {
         List<String> categories = List.of(
                 "TYPE_ADHERENT", "SITUATION_FAMILIALE", "STATUT",
                 "TYPE_DETAIL", "GRADE", "TYPE_ASSURANCE",
-                "AFFECTATION", "ROLE");
+                "AFFECTATION", "ROLE", "STATUT_PRESENCE");
         java.util.Map<String, List<ReferenceItem>> result = new java.util.LinkedHashMap<>();
         for (String cat : categories) {
             result.put(cat, referenceRepo.findByCategorieOrderByOrdreAscValeurAsc(cat));

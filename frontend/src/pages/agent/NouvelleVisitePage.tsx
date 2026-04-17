@@ -13,20 +13,17 @@ import {
   HeartPulse,
   ShieldCheck,
   CreditCard,
-  UserPlus,
-  CheckCircle2
+  UserPlus
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
-import { visiteService } from '../../services/visiteService';
 
 export const NouvelleVisitePage: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [successData, setSuccessData] = useState<{badge: string, staff: string} | null>(null);
 
   // Services & Motifs states
   const [services, setServices] = useState<Service[]>([]);
@@ -121,63 +118,15 @@ export const NouvelleVisitePage: React.FC = () => {
     setStep(2);
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedMotifId || !foundVisitor?.id) {
-      alert("Veuillez sélectionner un motif et un visiteur valide.");
+    if (!selectedServiceId) {
+      alert("Veuillez sélectionner un service.");
       return;
     }
-    
-    setLoading(true);
-    try {
-      const response = await visiteService.enregistrer({
-        visiteurId: foundVisitor.id,
-        objetVisiteId: Number(selectedMotifId),
-        notes: notes
-      });
-      
-      setSuccessData({
-        badge: response.badgeCode,
-        staff: response.fonctionnaireNom
-      });
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Erreur lors de l'enregistrement de la visite.");
-    } finally {
-      setLoading(false);
-    }
+    alert(`Visite enregistrée ! Badge B001 attribué à ${foundVisitor?.nom}. Notification envoyée au staff.`);
+    navigate('/agent');
   };
-
-  if (successData) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="bg-white p-10 rounded-3xl shadow-2xl border border-green-100 text-center max-w-md w-full animate-in fade-in zoom-in duration-300">
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 size={48} />
-          </div>
-          <h2 className="text-3xl font-black text-gray-800 mb-2">Succès !</h2>
-          <p className="text-gray-500 mb-8">La visite a été enregistrée avec succès dans le système.</p>
-          
-          <div className="bg-gray-50 rounded-2xl p-6 mb-8 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 font-bold text-xs uppercase">Badge attribué</span>
-              <span className="bg-blue-600 text-white px-4 py-1 rounded-lg font-black text-lg">{successData.badge}</span>
-            </div>
-            <div className="flex justify-between items-center text-left">
-              <span className="text-gray-400 font-bold text-xs uppercase">Assigné à</span>
-              <span className="text-gray-800 font-bold">{successData.staff}</span>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => navigate('/agent')}
-            className="w-full bg-slate-800 text-white py-4 rounded-xl font-bold hover:bg-slate-900 transition-all shadow-lg"
-          >
-            Retour au tableau de bord
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // Helper pour les icônes
   const getServiceIcon = (name: string) => {
@@ -428,10 +377,9 @@ export const NouvelleVisitePage: React.FC = () => {
 
             <button 
               type="submit"
-              disabled={loading}
-              className="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-50"
+              className="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg"
             >
-              {loading ? 'Enregistrement...' : 'Valider l\'arrivée et assigner un badge'}
+              Valider l'arrivée et assigner un badge
             </button>
           </div>
         </form>

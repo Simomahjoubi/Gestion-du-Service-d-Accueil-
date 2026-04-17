@@ -54,6 +54,9 @@ public class ReferenceDataInitializer implements ApplicationRunner {
 
         seed("ROLE", List.of(
                 "AGENT", "FONCTIONNAIRE", "RESPONSABLE", "DIRECTEUR", "ADMIN"));
+
+        seed("STATUT_PRESENCE", List.of(
+                "EN_LIGNE", "EN_PAUSE", "REUNION", "CONGE", "HORS_LIGNE"));
     }
 
     private void seed(String categorie, List<String> valeurs) {

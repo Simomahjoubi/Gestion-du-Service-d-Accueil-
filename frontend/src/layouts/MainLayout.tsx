@@ -14,8 +14,6 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import { CATEGORIE_LABELS, ALL_CATEGORIES, ReferenceCategorie } from '../services/referenceService';
-import { useWebSocket } from '../hooks/useWebSocket';
-import { useNotificationStore } from '../stores/notificationStore';
 
 export const MainLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -23,18 +21,6 @@ export const MainLayout: React.FC = () => {
   const location = useLocation();
   const [refOpen, setRefOpen] = useState(false);
   const refRef = useRef<HTMLDivElement>(null);
-
-  // Notifications
-  useWebSocket();
-  const notifications = useNotificationStore(state => state.notifications);
-
-  useEffect(() => {
-    if (notifications.length > 0) {
-      const latest = notifications[0];
-      // On peut aussi utiliser une librairie comme react-hot-toast, mais ici un alert suffit pour le test
-      alert(`NOTIFICATION : ${latest.message}`);
-    }
-  }, [notifications]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {

@@ -1,7 +1,7 @@
 import api from './api';
 
 export const visiteService = {
-  enregistrer: async (data: { visiteurId: number; objetVisiteId: number; notes?: string }) => {
+  enregistrer: async (data: { visiteurId: number; serviceId: number; algorithme: string; notes?: string }) => {
     const response = await api.post('/visites/enregistrer', data);
     return response.data;
   },

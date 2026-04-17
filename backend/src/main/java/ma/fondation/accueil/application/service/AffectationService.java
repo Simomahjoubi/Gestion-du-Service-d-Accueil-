@@ -33,20 +33,19 @@ public class AffectationService {
     }
 
     private Utilisateur appliquerAlgorithmeSequentiel(List<AffectationFonctionnaire> affectations, Long serviceId) {
-        // V4: Le premier visiteur est affecté au fonctionnaire A, le deuxième au B...
-        // On considère un objet de visite à affecter :
-        // 1. Trouver tous les fonctionnaires libres (pas de visite EN_COURS)
+        // Step 1: Find all free staff (no active visits)
         List<Utilisateur> freeStaff = affectations.stream()
                 .map(AffectationFonctionnaire::getFonctionnaire)
                 .filter(f -> visiteRepo.findByFonctionnaireIdAndStatut(f.getId(), StatutVisite.EN_COURS).isEmpty())
                 .toList();
 
         if (!freeStaff.isEmpty()) {
-            // Parmi les libres, on prend celui qui a la priorité la plus haute (ordre de passage)
+            // Find the staff who has 'done' the fewest visits today (simple sequential proxy)
+            // or just the next in priority order among free staff.
             return freeStaff.get(0);
         }
 
-        // 2. Si tous sont occupés, on place en file d'attente du fonctionnaire qui a la file la plus courte
+        // Step 2: If everyone is busy, find the one with the smallest queue
         return affectations.stream()
                 .map(AffectationFonctionnaire::getFonctionnaire)
                 .min(Comparator.comparingInt(f -> visiteRepo.findByFonctionnaireIdAndStatut(f.getId(), StatutVisite.EN_ATTENTE).size()))
@@ -54,25 +53,17 @@ public class AffectationService {
     }
 
     private Utilisateur appliquerAlgorithmePriorite(List<AffectationFonctionnaire> affectations) {
-        // V4: Les visiteurs sont affectés en priorité au fonctionnaire A. 
-        // Si A est absent ou en congé, le système affecte automatiquement au B...
-        // On interprète "absent/en congé" par "occupé" ou "non actif" dans cette version simplifiée.
-        
+        // Priority algorithm gives EVERYTHING to Staff 1 (Priority 1) unless they are busy.
         for (AffectationFonctionnaire aff : affectations) {
             Utilisateur staff = aff.getFonctionnaire();
-            if (!staff.isActif()) continue;
-
             boolean isBusy = !visiteRepo.findByFonctionnaireIdAndStatut(staff.getId(), StatutVisite.EN_COURS).isEmpty();
+            
             if (!isBusy) {
                 return staff;
             }
         }
 
-        // Si tous sont occupés, on respecte la hiérarchie (priorité 1)
-        return affectations.stream()
-                .filter(a -> a.getFonctionnaire().isActif())
-                .map(AffectationFonctionnaire::getFonctionnaire)
-                .findFirst()
-                .orElse(affectations.get(0).getFonctionnaire());
+        // If all are busy, return the one with the highest priority (lowest rank number)
+        return affectations.get(0).getFonctionnaire();
     }
 }
