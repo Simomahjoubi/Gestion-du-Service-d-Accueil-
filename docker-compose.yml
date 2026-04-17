@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:sqlserver://db:1433;databaseName=FH2_ACCUEIL_DB;encrypt=true;trustServerCertificate=true;connectTimeout=60;loginTimeout=60
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=YourStrong@Passw0rd
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Frontend Web
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -C -Q \"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'FH2_ACCUEIL_DB') CREATE DATABASE [FH2_ACCUEIL_DB]; SELECT 1\" || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 15
+      start_period: 30s
