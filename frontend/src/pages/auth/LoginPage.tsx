@@ -126,21 +126,15 @@ export const LoginPage: React.FC = () => {
 
         {/* Right: Info */}
         <div className="w-full md:w-1/2 p-10 flex flex-col items-center justify-center bg-white">
-          <div className="mb-8 flex flex-col items-center">
-            <div className="flex items-center gap-2 mb-4 text-center">
-              <span className="text-[10px] text-gray-400 uppercase tracking-tighter">Royaume du Maroc</span>
-              <span className="text-[10px] text-gray-400 uppercase tracking-tighter">المملكة المغربية</span>
-            </div>
-            <div className="text-2xl font-black text-red-600 tracking-tighter flex flex-col items-center">
-              <span className="text-lg">FONDATION HASSAN II</span>
-              <span className="text-sm font-arabic font-bold text-blue-700">مؤسسة الحسن الثاني</span>
-            </div>
-            <div className="mt-2 text-[8px] text-gray-400 text-center max-w-[200px]">
-              pour les œuvres sociales des agents d'autorité et des fonctionnaires du Ministère de l'Intérieur
-            </div>
+          <div className="mb-8 w-full flex justify-center">
+            <img 
+              src="/logoarfr.jpg" 
+              alt="Logo Fondation" 
+              className="w-72" 
+            />
           </div>
 
-          <h2 className="text-[#0f172a] font-bold text-center text-lg max-w-xs leading-tight mt-4">
+          <h2 className="text-[#0f172a] font-bold text-center text-xl max-w-sm leading-tight mt-4">
             Bienvenue dans l'application de gestion des adhérents de la Fondation Hassan 2
           </h2>
         </div>
