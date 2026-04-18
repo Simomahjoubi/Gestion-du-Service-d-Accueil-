@@ -16,10 +16,16 @@ public class VisiteResponse {
     private String typeAdherentDetail;
     private String grade;
     private String typeAssurance;
+    private Long   fonctionnaireId;
     private String fonctionnaireNom;
     private String badgeCode;
     private StatutVisite statut;
     private LocalDateTime heureArrivee;
+    private LocalDateTime heureAcceptation;
+    private LocalDateTime heureEntree;
+    private LocalDateTime heureSortie;
+    private LocalDateTime heureCloture;
+    private LocalDateTime heureRestitutionBadge;
     private String motifLibelle;
     private String serviceNom;
 }

@@ -1,27 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  User, 
+import {
+  Search,
+  User,
   Users,
-  ArrowRight, 
-  ChevronLeft, 
-  Star, 
-  Building2, 
+  ArrowRight,
+  ChevronLeft,
+  Star,
+  Building2,
   ClipboardList,
   AlertCircle,
   HeartPulse,
   ShieldCheck,
   CreditCard,
-  UserPlus
+  UserPlus,
+  CheckCircle2,
+  Tag,
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
+import api from '../../services/api';
+import { useAuthStore } from '../../stores/authStore';
+
+interface VisiteCreatedResult {
+  id: number;
+  visiteurNom: string;
+  fonctionnaireNom: string;
+  serviceNom: string;
+  badgeCode: string;
+  heureArrivee: string;
+}
 
 export const NouvelleVisitePage: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); 
+  const user = useAuthStore(s => s.user);
+
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,52 +47,40 @@ export const NouvelleVisitePage: React.FC = () => {
   const [selectedMotifId, setSelectedMotifId] = useState<string>('');
 
   // Form states
-  const [searchType, setSearchType] = useState('CIN'); // CIN, ADHESION, NOM
+  const [searchType, setSearchType] = useState('CIN');
   const [searchId, setSearchId] = useState('');
   const [searchResults, setSearchResults] = useState<Visitor[]>([]);
   const [foundVisitor, setFoundVisitor] = useState<Visitor | null>(null);
-  
+
   const [isVip, setIsVip] = useState(false);
   const [notes, setNotes] = useState('');
 
+  // Confirmation modal
+  const [confirmation, setConfirmation] = useState<VisiteCreatedResult | null>(null);
+
   // Charger les services au démarrage
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const data = await serviceService.getAll();
-        setServices(data);
-      } catch (err) {
-        console.error("Erreur chargement services", err);
-      }
-    };
-    fetchServices();
+    serviceService.getAll().then(setServices).catch(() => {});
   }, []);
 
   // Charger les motifs quand le service change
   useEffect(() => {
     if (selectedServiceId) {
-      const fetchMotifs = async () => {
-        try {
-          const data = await serviceService.getMotifs(selectedServiceId);
-          setMotifs(data);
-          setSelectedMotifId(''); // Reset motif selection
-        } catch (err) {
-          console.error("Erreur chargement motifs", err);
-        }
-      };
-      fetchMotifs();
+      serviceService.getMotifs(selectedServiceId)
+        .then(data => { setMotifs(data); setSelectedMotifId(''); })
+        .catch(() => {});
     } else {
       setMotifs([]);
     }
   }, [selectedServiceId]);
-  
-  // Recherche réelle via API
+
+  // Recherche via API
   const handleSearch = async () => {
     setLoading(true);
     setError('');
     setSearchResults([]);
     setFoundVisitor(null);
-    
+
     try {
       let results: Visitor[] = [];
       if (searchType === 'CIN') {
@@ -106,7 +109,7 @@ export const NouvelleVisitePage: React.FC = () => {
       } else {
         setSearchResults(results);
       }
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la recherche du visiteur.');
     } finally {
       setLoading(false);
@@ -118,35 +121,58 @@ export const NouvelleVisitePage: React.FC = () => {
     setStep(2);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId) {
-      alert("Veuillez sélectionner un service.");
-      return;
+    if (!selectedServiceId) { alert('Veuillez sélectionner un service.'); return; }
+    if (!selectedMotifId)   { alert('Veuillez sélectionner un motif.'); return; }
+    if (!foundVisitor)      return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.post('/visites/enregistrer', {
+        visiteurId:    foundVisitor.id,
+        objetVisiteId: Number(selectedMotifId),
+        notes,
+        isVip,
+        agentId:       user?.id,
+      });
+      const data = response.data;
+      setConfirmation({
+        id:               data.id,
+        visiteurNom:      data.visiteurNom,
+        fonctionnaireNom: data.fonctionnaireNom,
+        serviceNom:       data.serviceNom,
+        badgeCode:        data.badgeCode,
+        heureArrivee:     data.heureArrivee,
+      });
+    } catch (err: any) {
+      const d = err.response?.data;
+      const msg = d?.message || d?.error || (typeof d === 'string' ? d : null) || err.message || 'Erreur lors de la création de la visite.';
+      setError(String(msg));
+    } finally {
+      setLoading(false);
     }
-    alert(`Visite enregistrée ! Badge B001 attribué à ${foundVisitor?.nom}. Notification envoyée au staff.`);
-    navigate('/agent');
   };
 
-  // Helper pour les icônes
   const getServiceIcon = (name: string) => {
     const n = name.toLowerCase();
     if (n.includes('estivage')) return <Star size={16}/>;
-    if (n.includes('ordre')) return <ClipboardList size={16}/>;
+    if (n.includes('ordre'))    return <ClipboardList size={16}/>;
     if (n.includes('adhésion')) return <UserPlus size={16}/>;
-    if (n.includes('médical')) return <HeartPulse size={16}/>;
-    if (n.includes('info')) return <Search size={16}/>;
+    if (n.includes('médical'))  return <HeartPulse size={16}/>;
+    if (n.includes('info'))     return <Search size={16}/>;
     if (n.includes('assurance')) return <ShieldCheck size={16}/>;
-    if (n.includes('finance')) return <CreditCard size={16}/>;
-    if (n.includes('tech')) return <Building2 size={16}/>;
+    if (n.includes('finance'))  return <CreditCard size={16}/>;
+    if (n.includes('tech'))     return <Building2 size={16}/>;
     return <Users size={16}/>;
   };
 
   return (
     <div className="w-full">
-      {/* Header avec bouton retour */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <button 
+        <button
           onClick={() => step === 1 ? navigate('/agent') : setStep(1)}
           className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
         >
@@ -154,14 +180,14 @@ export const NouvelleVisitePage: React.FC = () => {
           <span>{step === 1 ? 'Retour au tableau de bord' : 'Changer de visiteur'}</span>
         </button>
         <div className="flex items-center gap-2">
-           <span className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`}></span>
-           <div className="w-10 h-0.5 bg-gray-200"></div>
-           <span className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></span>
+          <span className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`}/>
+          <div className="w-10 h-0.5 bg-gray-200"/>
+          <span className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}/>
         </div>
       </div>
 
       {step === 1 ? (
-        /* ÉTAPE 1 : RECHERCHE */
+        /* ── ÉTAPE 1 : RECHERCHE ── */
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -174,9 +200,9 @@ export const NouvelleVisitePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
             <div className="col-span-1">
               <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Rechercher par</label>
-              <select 
+              <select
                 value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
+                onChange={e => setSearchType(e.target.value)}
                 className="w-full border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-3 bg-gray-50"
               >
                 <option value="CIN">CIN</option>
@@ -187,11 +213,12 @@ export const NouvelleVisitePage: React.FC = () => {
             <div className="col-span-2">
               <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Valeur à rechercher</label>
               <div className="relative">
-                <input 
+                <input
                   type="text"
                   value={searchId}
-                  onChange={(e) => setSearchId(e.target.value)}
-                  placeholder={searchType === 'NOM' ? "Ex: Alami" : "Entrez l'identifiant"}
+                  onChange={e => setSearchId(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && searchId && handleSearch()}
+                  placeholder={searchType === 'NOM' ? 'Ex: Alami' : "Entrez l'identifiant"}
                   className="w-full border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-3 pl-10"
                 />
                 <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
@@ -199,27 +226,26 @@ export const NouvelleVisitePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Affichage des résultats multiples */}
           {searchResults.length > 1 && (
             <div className="mt-8 w-full">
-               <h3 className="text-sm font-bold text-gray-500 mb-4 flex items-center gap-2">
-                 <Users size={16} /> {searchResults.length} résultats trouvés
-               </h3>
-               <div className="space-y-3">
-                 {searchResults.map(v => (
-                   <div 
-                    key={v.id} 
+              <h3 className="text-sm font-bold text-gray-500 mb-4 flex items-center gap-2">
+                <Users size={16} /> {searchResults.length} résultats trouvés
+              </h3>
+              <div className="space-y-3">
+                {searchResults.map(v => (
+                  <div
+                    key={v.id}
                     onClick={() => selectVisitor(v)}
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all group"
-                   >
-                     <div>
-                       <p className="font-bold text-gray-800 group-hover:text-blue-700">{v.nom} {v.prenom}</p>
-                       <p className="text-xs text-gray-500">CIN: {v.cin} | Type: {v.type}</p>
-                     </div>
-                     <ArrowRight size={18} className="text-gray-300 group-hover:text-blue-500" />
-                   </div>
-                 ))}
-               </div>
+                  >
+                    <div>
+                      <p className="font-bold text-gray-800 group-hover:text-blue-700">{v.nom} {v.prenom}</p>
+                      <p className="text-xs text-gray-500">CIN: {v.cin} | Type: {v.type}</p>
+                    </div>
+                    <ArrowRight size={18} className="text-gray-300 group-hover:text-blue-500" />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -230,20 +256,20 @@ export const NouvelleVisitePage: React.FC = () => {
           )}
 
           <div className="mt-10 flex justify-center">
-            <button 
+            <button
               onClick={handleSearch}
               disabled={loading || !searchId}
               className="bg-blue-600 text-white px-10 py-3 rounded-full font-bold hover:bg-blue-700 transition-all flex items-center gap-3 shadow-lg shadow-blue-200 disabled:opacity-50"
             >
-              {loading ? 'Recherche en cours...' : 'Rechercher'} 
+              {loading ? 'Recherche en cours...' : 'Rechercher'}
               {!loading && <ArrowRight size={20} />}
             </button>
           </div>
         </div>
       ) : (
-        /* ÉTAPE 2 : FORMULAIRE D'ENREGISTREMENT */
+        /* ── ÉTAPE 2 : FORMULAIRE ── */
         <form onSubmit={handleRegister} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Info Visiteur (Gauche) */}
+          {/* Info Visiteur */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
               <div className="flex flex-col items-center text-center">
@@ -264,7 +290,6 @@ export const NouvelleVisitePage: React.FC = () => {
               </div>
 
               <div className="mt-8 space-y-4 border-t border-gray-50 pt-6">
-                {/* Règle Adhérent : Affiche CIN, N° Adhésion et détails pro */}
                 {foundVisitor?.type === 'ADHERENT' && (
                   <>
                     <InfoRow label="CIN" value={foundVisitor.cin || 'N/A'} />
@@ -273,43 +298,29 @@ export const NouvelleVisitePage: React.FC = () => {
                       <InfoRow label="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'N/A'} />
                       <InfoRow label="Grade" value={foundVisitor.grade || 'N/A'} />
                       <InfoRow label="Affectation" value={foundVisitor.affectation || 'N/A'} color="text-slate-900" />
-                      <InfoRow 
-                        label="Assurance" 
-                        value={foundVisitor.typeAssurance || 'N/A'} 
-                        color={foundVisitor.typeAssurance?.toLowerCase().includes('non') ? 'text-red-600' : 'text-green-600'} 
+                      <InfoRow label="Assurance" value={foundVisitor.typeAssurance || 'N/A'}
+                        color={foundVisitor.typeAssurance?.toLowerCase().includes('non') ? 'text-red-600' : 'text-green-600'}
                       />
                     </div>
                   </>
                 )}
-
-                {/* Règle Conjoint : Affiche son CIN, Lien et infos de l'Adhérent */}
                 {foundVisitor?.type === 'CONJOINT' && (
                   <>
                     <InfoRow label="CIN Conjoint" value={foundVisitor.cin || 'N/A'} />
                     <InfoRow label="Lien" value={foundVisitor.lienParente || 'ÉPOUSE'} color="text-purple-600" />
-                    <div className="pt-2 mt-2 border-t border-dashed border-gray-100">
-                      <InfoRow label="Adhérent" value={foundVisitor.parentNom || 'N/A'} color="text-slate-900" />
-                      <InfoRow label="CIN Adhérent" value={foundVisitor.parentCin || 'N/A'} />
-                    </div>
                   </>
                 )}
-
-                {/* Règle Enfant : Affiche son CIN, Lien et infos du Parent (Adhérent) */}
                 {foundVisitor?.type === 'ENFANT' && (
                   <>
                     <InfoRow label="CIN Enfant" value={foundVisitor.cin || 'N/A'} />
                     <InfoRow label="Lien" value={foundVisitor.lienParente || 'ENFANT'} color="text-purple-600" />
-                    <div className="pt-2 mt-2 border-t border-dashed border-gray-100">
-                      <InfoRow label="Adhérent (Parent)" value={foundVisitor.parentNom || 'N/A'} color="text-slate-900" />
-                      <InfoRow label="CIN Adhérent" value={foundVisitor.parentCin || 'N/A'} />
-                    </div>
                   </>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Formulaire Visite (Droite) */}
+          {/* Formulaire Visite */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
               <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -322,12 +333,12 @@ export const NouvelleVisitePage: React.FC = () => {
                   <label className="block text-sm font-bold text-gray-700 mb-2">Service cible</label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {services.map(s => (
-                      <ServiceToggle 
+                      <ServiceToggle
                         key={s.id}
-                        label={s.nom} 
-                        icon={getServiceIcon(s.nom)} 
-                        selected={selectedServiceId === s.id} 
-                        onClick={() => setSelectedServiceId(s.id)} 
+                        label={s.nom}
+                        icon={getServiceIcon(s.nom)}
+                        selected={selectedServiceId === s.id}
+                        onClick={() => setSelectedServiceId(s.id)}
                       />
                     ))}
                   </div>
@@ -335,9 +346,9 @@ export const NouvelleVisitePage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Motif de la visite</label>
-                  <select 
+                  <select
                     value={selectedMotifId}
-                    onChange={(e) => setSelectedMotifId(e.target.value)}
+                    onChange={e => setSelectedMotifId(e.target.value)}
                     required
                     className="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3"
                   >
@@ -349,62 +360,138 @@ export const NouvelleVisitePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                   <div className="flex-1">
-                      <p className="text-sm font-bold text-yellow-800">Priorité VIP</p>
-                      <p className="text-xs text-yellow-700">Placer ce visiteur en haut de la file d'attente</p>
-                   </div>
-                   <input 
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-yellow-800">Priorité VIP</p>
+                    <p className="text-xs text-yellow-700">Affecter au responsable du service</p>
+                  </div>
+                  <input
                     type="checkbox"
                     checked={isVip}
-                    onChange={(e) => setIsVip(e.target.checked)}
+                    onChange={e => setIsVip(e.target.checked)}
                     className="w-6 h-6 rounded text-yellow-600 focus:ring-yellow-500 border-yellow-300"
-                   />
-                   <Star size={20} className={isVip ? "text-yellow-500 fill-yellow-500" : "text-yellow-300"} />
+                  />
+                  <Star size={20} className={isVip ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-300'} />
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Notes (Optionnel)</label>
-                  <textarea 
+                  <textarea
                     rows={3}
                     value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    onChange={e => setNotes(e.target.value)}
                     className="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 p-3"
                     placeholder="Informations complémentaires..."
-                  ></textarea>
+                  />
                 </div>
               </div>
             </div>
 
-            <button 
+            {error && (
+              <div className="flex items-center gap-2 text-red-600 text-sm font-medium bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <AlertCircle size={16} /> {error}
+              </div>
+            )}
+
+            <button
               type="submit"
-              className="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg"
+              disabled={loading}
+              className="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-60"
             >
-              Valider l'arrivée et assigner un badge
+              {loading ? 'Enregistrement...' : 'Valider l\'arrivée et assigner un badge'}
+              {!loading && <ArrowRight size={20} />}
             </button>
           </div>
         </form>
+      )}
+
+      {/* ── Modal de confirmation ── */}
+      {confirmation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <CheckCircle2 size={28} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-bold text-lg">Visite enregistrée</p>
+                  <p className="text-emerald-100 text-xs">Notification envoyée au fonctionnaire</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Details */}
+            <div className="p-6 space-y-4">
+              <ConfirmRow icon={<User size={16}/>}     label="Visiteur"       value={confirmation.visiteurNom} />
+              <ConfirmRow icon={<Tag size={16}/>}      label="Badge assigné"  value={confirmation.badgeCode} highlight />
+              <ConfirmRow icon={<Users size={16}/>}    label="Fonctionnaire"  value={confirmation.fonctionnaireNom} />
+              <ConfirmRow icon={<Building2 size={16}/>} label="Service"       value={confirmation.serviceNom} />
+            </div>
+
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => {
+                  setConfirmation(null);
+                  navigate('/agent');
+                }}
+                className="flex-1 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all"
+              >
+                Retour au tableau de bord
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmation(null);
+                  setStep(1);
+                  setFoundVisitor(null);
+                  setSearchId('');
+                  setSelectedServiceId(null);
+                  setSelectedMotifId('');
+                  setIsVip(false);
+                  setNotes('');
+                }}
+                className="flex-1 py-3 text-sm font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
+              >
+                Nouvelle visite
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
-const InfoRow: React.FC<{ label: string, value: string, color?: string }> = ({ label, value, color }) => (
+// ─── Sub-components ────────────────────────────────────────────────────────────
+const InfoRow: React.FC<{ label: string; value: string; color?: string }> = ({ label, value, color }) => (
   <div className="flex justify-between items-center text-sm">
     <span className="text-gray-400 font-medium">{label}</span>
     <span className={`font-bold ${color || 'text-gray-700'}`}>{value}</span>
   </div>
 );
 
-const ServiceToggle: React.FC<{ label: string, icon: React.ReactNode, selected: boolean, onClick: () => void }> = ({ label, icon, selected, onClick }) => (
+const ServiceToggle: React.FC<{ label: string; icon: React.ReactNode; selected: boolean; onClick: () => void }> = ({ label, icon, selected, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all font-bold text-sm ${
-      selected 
-        ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-sm' 
+      selected
+        ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-sm'
         : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'
     }`}
   >
     {icon} {label}
   </button>
+);
+
+const ConfirmRow: React.FC<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = ({ icon, label, value, highlight }) => (
+  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${highlight ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-50 text-blue-500'}`}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
+      <p className={`text-sm font-bold ${highlight ? 'text-emerald-700' : 'text-gray-800'}`}>{value}</p>
+    </div>
+  </div>
 );

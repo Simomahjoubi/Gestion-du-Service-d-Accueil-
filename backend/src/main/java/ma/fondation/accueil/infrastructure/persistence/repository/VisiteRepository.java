@@ -22,6 +22,9 @@ public interface VisiteRepository extends JpaRepository<Visite, Long> {
 
     List<Visite> findByFonctionnaireIdAndStatut(Long fonctionnaireId, StatutVisite statut);
 
+    @Query("SELECT COUNT(v) FROM Visite v WHERE v.fonctionnaire.id = :id AND v.statut IN ('EN_ATTENTE', 'EN_COURS', 'REAFFECTEE')")
+    long countNonCloturees(@Param("id") Long fonctionnaireId);
+
     @Query("SELECT COUNT(v) FROM Visite v WHERE v.statut = 'EN_ATTENTE' AND v.heureArrivee >= :debut")
     long countEnAttente(@Param("debut") LocalDateTime debut);
 

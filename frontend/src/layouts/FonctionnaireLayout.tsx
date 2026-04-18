@@ -112,12 +112,23 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
     return offlineReasons.find(r => r.key === s) ?? HORS_LIGNE_CFG;
   };
 
-  // ── Au montage : passer EN_LIGNE automatiquement ──────────────────────────
+  // ── Au montage : passer EN_LIGNE seulement si était HORS_LIGNE ───────────
   useEffect(() => {
     if (!user?.id) return;
-    api.put(`/admin/users/${user.id}/statut-presence`, { statut: 'EN_LIGNE' })
-      .then(() => setStatut('EN_LIGNE'))
-      .catch(() => setStatut('EN_LIGNE')); // optimistic
+    api.get<{ statutPresence: string }>(`/admin/users/${user.id}`)
+      .then(r => {
+        const current = r.data.statutPresence ?? 'HORS_LIGNE';
+        if (current === 'HORS_LIGNE') {
+          api.put(`/admin/users/${user.id}/statut-presence`, { statut: 'EN_LIGNE' }).catch(() => {});
+          setStatut('EN_LIGNE');
+        } else {
+          setStatut(current);
+        }
+      })
+      .catch(() => {
+        api.put(`/admin/users/${user.id}/statut-presence`, { statut: 'EN_LIGNE' }).catch(() => {});
+        setStatut('EN_LIGNE');
+      });
   }, [user?.id]);
 
   // ── Passer hors ligne au fermeture/navigation (best-effort) ──────────────

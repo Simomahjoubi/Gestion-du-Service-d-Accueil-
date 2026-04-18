@@ -12,4 +12,9 @@ public class CreateVisiteRequest {
     private Long objetVisiteId;
 
     private String notes;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("isVip")
+    private boolean vip;
+
+    private Long agentId;
 }

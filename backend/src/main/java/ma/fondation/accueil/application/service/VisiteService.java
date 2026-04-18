@@ -27,8 +27,8 @@ public class VisiteService {
     private final NotificationService notificationService;
 
     @Transactional
-    public Visite creerVisite(Visiteur visiteur, Long objetVisiteId, String notes, Utilisateur agent) {
-        // 1. Charger le motif de la visite
+    public Visite creerVisite(Visiteur visiteur, Long objetVisiteId, String notes, boolean isVip, Utilisateur agent) {
+        // 1. Charger le motif
         ObjetVisite objet = objetVisiteRepo.findById(objetVisiteId)
                 .orElseThrow(() -> new RuntimeException("Motif de visite introuvable."));
 
@@ -36,12 +36,14 @@ public class VisiteService {
         visiteRepo.findActiveByVisiteurId(visiteur.getId())
                 .ifPresent(v -> { throw new RuntimeException("Le visiteur a déjà une visite active."); });
 
-        // 3. Assigner un badge disponible
-        Badge badge = badgeRepo.findFirstByStatut(StatutBadge.DISPONIBLE)
-                .orElseThrow(() -> new RuntimeException("Aucun badge disponible."));
+        // 3. Assigner un badge disponible du même service que le motif
+        Long serviceId = objet.getService().getId();
+        Badge badge = badgeRepo.findFirstByServiceIdAndStatut(serviceId, StatutBadge.DISPONIBLE)
+                .orElseGet(() -> badgeRepo.findFirstByStatut(StatutBadge.DISPONIBLE)
+                        .orElseThrow(() -> new RuntimeException("Aucun badge disponible.")));
 
-        // 4. Déterminer le fonctionnaire via l'algorithme de l'objet de visite
-        Utilisateur fonctionnaire = affectationService.determinerFonctionnaire(objet.getService().getId(), objet.getAlgorithme());
+        // 4. Déterminer le fonctionnaire via l'algorithme
+        Utilisateur fonctionnaire = affectationService.determinerFonctionnaire(objet, isVip);
 
         // 5. Créer la visite
         Visite visite = Visite.builder()
@@ -63,7 +65,7 @@ public class VisiteService {
         badge.setVisiteCouranteId(visite.getId());
         badgeRepo.save(badge);
 
-        // 7. Notifier le fonctionnaire (WebSocket)
+        // 7. Notifier le fonctionnaire (et l'agent) via WebSocket
         notificationService.notifierArriveeVisiteur(visite);
 
         return visite;
@@ -73,9 +75,11 @@ public class VisiteService {
     public void recevoirVisiteur(Long visiteId) {
         Visite visite = visiteRepo.findById(visiteId)
                 .orElseThrow(() -> new RuntimeException("Visite introuvable."));
-        
+
+        LocalDateTime now = LocalDateTime.now();
         visite.setStatut(StatutVisite.EN_COURS);
-        visite.setHeureEntree(LocalDateTime.now());
+        visite.setHeureAcceptation(now);
+        visite.setHeureEntree(now);
         visiteRepo.save(visite);
     }
 
@@ -87,10 +91,9 @@ public class VisiteService {
         visite.setStatut(StatutVisite.TERMINEE);
         visite.setHeureSortie(LocalDateTime.now());
         visite.setHeureCloture(LocalDateTime.now());
-        
-        // Le badge passe en "Pret à restituer"
+
         visite.getBadge().setStatut(StatutBadge.PRET_A_RESTITUER);
-        
+
         visiteRepo.save(visite);
         badgeRepo.save(visite.getBadge());
     }
@@ -103,10 +106,13 @@ public class VisiteService {
         if (badge.getVisiteCouranteId() != null) {
             Visite visite = visiteRepo.findById(badge.getVisiteCouranteId())
                     .orElseThrow(() -> new RuntimeException("Visite associée introuvable."));
-            
+
             visite.setStatut(StatutVisite.CLOTUREE);
             visiteRepo.save(visite);
         }
+
+        visite.setHeureRestitutionBadge(LocalDateTime.now());
+        visiteRepo.save(visite);
 
         badge.setStatut(StatutBadge.DISPONIBLE);
         badge.setVisiteCouranteId(null);

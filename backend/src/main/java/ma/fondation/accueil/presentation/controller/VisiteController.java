@@ -74,17 +74,19 @@ public class VisiteController {
         Visiteur visiteur = visiteurRepo.findById(request.getVisiteurId())
                 .orElseThrow(() -> new RuntimeException("Visiteur introuvable."));
 
-        // TODO: Get current agent from SecurityContext
-        // For now, take any agent for testing
-        Utilisateur agent = utilisateurRepo.findAll().stream()
-                .filter(u -> u.getRole().name().equals("AGENT"))
-                .findFirst()
-                .orElse(null);
+        // Résoudre l'agent d'accueil depuis l'ID fourni dans la requête
+        Utilisateur agent = request.getAgentId() != null
+                ? utilisateurRepo.findById(request.getAgentId()).orElse(null)
+                : utilisateurRepo.findAll().stream()
+                        .filter(u -> u.getRole().name().equals("AGENT"))
+                        .findFirst()
+                        .orElse(null);
 
         Visite visite = visiteService.creerVisite(
                 visiteur,
                 request.getObjetVisiteId(),
                 request.getNotes(),
+                request.isVip(),
                 agent
         );
 
@@ -103,10 +105,15 @@ public class VisiteController {
                 .typeAdherentDetail(v.getTypeAdherentDetail())
                 .grade(v.getGrade())
                 .typeAssurance(v.getTypeAssurance())
+                .fonctionnaireId(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getId() : null)
                 .fonctionnaireNom(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getNomComplet() : "Non assigné")
                 .badgeCode(visite.getBadge() != null ? visite.getBadge().getCode() : "—")
                 .statut(visite.getStatut())
                 .heureArrivee(visite.getHeureArrivee())
+                .heureAcceptation(visite.getHeureAcceptation())
+                .heureEntree(visite.getHeureEntree())
+                .heureSortie(visite.getHeureSortie())
+                .heureCloture(visite.getHeureCloture())
                 .motifLibelle(visite.getObjetVisite() != null ? visite.getObjetVisite().getLibelleFr() : "—")
                 .serviceNom(visite.getService() != null ? visite.getService().getNom() : "—")
                 .build();

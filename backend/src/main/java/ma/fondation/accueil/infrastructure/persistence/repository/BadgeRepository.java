@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface BadgeRepository extends JpaRepository<Badge, Long> {
     Optional<Badge> findByCode(String code);
     Optional<Badge> findFirstByStatut(StatutBadge statut);
+    Optional<Badge> findFirstByServiceIdAndStatut(Long serviceId, StatutBadge statut);
     long countByStatut(StatutBadge statut);
     List<Badge> findByServiceIdOrderByCodeAsc(Long serviceId);
     List<Badge> findAllByOrderByCodeAsc();

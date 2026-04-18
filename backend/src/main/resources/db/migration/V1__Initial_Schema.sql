@@ -79,9 +79,11 @@ CREATE TABLE visites (
     badge_id BIGINT NULL REFERENCES badges(id),
     statut NVARCHAR(255) NOT NULL DEFAULT 'EN_ATTENTE' CHECK (statut IN ('EN_ATTENTE','EN_COURS','REAFFECTEE','TERMINEE','CLOTUREE')),
     heure_arrivee DATETIME2 NOT NULL DEFAULT GETDATE(),
+    heure_acceptation DATETIME2 NULL,
     heure_entree DATETIME2 NULL,
     heure_sortie DATETIME2 NULL,
     heure_cloture DATETIME2 NULL,
+    heure_restitution_badge DATETIME2 NULL,
     notes NVARCHAR(1000) NULL,
     date_creation DATETIME2 NULL,
     date_modification DATETIME2 NULL
@@ -177,7 +179,8 @@ INSERT INTO reference_items (categorie, valeur, ordre) VALUES
     ('STATUT_PRESENCE', 'EN_PAUSE',    1),
     ('STATUT_PRESENCE', 'REUNION',     2),
     ('STATUT_PRESENCE', 'CONGE',       3),
-    ('STATUT_PRESENCE', 'HORS_LIGNE',  4);
+    ('STATUT_PRESENCE', 'MISSION',     4),
+    ('STATUT_PRESENCE', 'HORS_LIGNE',  5);
 
 -- Affectation (villes du Maroc)
 INSERT INTO reference_items (categorie, valeur, ordre) VALUES

@@ -193,6 +193,13 @@ public class AdminController {
         return utilisateurRepo.findAll();
     }
 
+    @GetMapping("/users/{id}")
+    public ResponseEntity<Utilisateur> getUser(@PathVariable Long id) {
+        return utilisateurRepo.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/users")
     public Utilisateur createUser(@RequestBody java.util.Map<String, Object> userData) {
         Utilisateur user = new Utilisateur();

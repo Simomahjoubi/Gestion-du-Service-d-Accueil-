@@ -52,9 +52,11 @@ public class Visite {
     @Builder.Default
     private LocalDateTime heureArrivee = LocalDateTime.now();
 
+    private LocalDateTime heureAcceptation;
     private LocalDateTime heureEntree;
     private LocalDateTime heureSortie;
     private LocalDateTime heureCloture;
+    private LocalDateTime heureRestitutionBadge;
 
     private String notes;
 
