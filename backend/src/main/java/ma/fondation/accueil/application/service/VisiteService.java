@@ -108,11 +108,9 @@ public class VisiteService {
                     .orElseThrow(() -> new RuntimeException("Visite associée introuvable."));
 
             visite.setStatut(StatutVisite.CLOTUREE);
+            visite.setHeureRestitutionBadge(LocalDateTime.now());
             visiteRepo.save(visite);
         }
-
-        visite.setHeureRestitutionBadge(LocalDateTime.now());
-        visiteRepo.save(visite);
 
         badge.setStatut(StatutBadge.DISPONIBLE);
         badge.setVisiteCouranteId(null);
