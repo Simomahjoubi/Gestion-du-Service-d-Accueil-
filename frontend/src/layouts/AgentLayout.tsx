@@ -102,6 +102,18 @@ export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <main className="flex-1 overflow-y-auto p-8 w-full">
         {children}
       </main>
+
+      {/* Footer Institutionnel */}
+      <footer className="py-6 border-t border-gray-100 bg-white">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            Fondation Hassan II pour les Œuvres Sociales
+          </p>
+          <p className="text-[11px] font-black text-blue-900/40 uppercase tracking-tighter italic">
+            FH2_service_informatique <span className="text-blue-600/60 not-italic ml-1">Devlabs</span>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
