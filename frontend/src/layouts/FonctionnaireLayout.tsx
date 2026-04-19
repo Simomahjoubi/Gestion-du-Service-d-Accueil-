@@ -167,7 +167,7 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/fonctionnaire')}>
             <Menu className="text-gray-500 mr-1" size={20} />
-            <img src="/logoarfr.jpg" alt="Logo Fondation" className="h-12 w-auto" />
+            <img src="/logoarfr.jpg?v=2" alt="Logo Fondation" className="h-12 w-auto" />
           </div>
           <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
             <span className="w-2 h-2 rounded-full bg-blue-500" />

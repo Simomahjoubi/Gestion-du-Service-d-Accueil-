@@ -31,7 +31,7 @@ export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/agent')}>
              <Menu className="text-gray-500 mr-2" size={20} />
-             <img src="/logoarfr.jpg" alt="Logo Fondation" className="h-12 w-auto" />
+             <img src="/logoarfr.jpg?v=2" alt="Logo Fondation" className="h-12 w-auto" />
           </div>
 
           <nav className="hidden lg:flex items-center gap-1">
