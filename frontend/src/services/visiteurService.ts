@@ -73,5 +73,9 @@ export const visiteurService = {
   rechercherParNom: async (query: string) => {
     const response = await api.get<Visiteur[]>(`/visiteurs/recherche/nom?query=${query}`);
     return response.data;
+  },
+  creer: async (visiteur: Visiteur) => {
+    const response = await api.post<Visiteur>('/visiteurs', visiteur);
+    return response.data;
   }
 };

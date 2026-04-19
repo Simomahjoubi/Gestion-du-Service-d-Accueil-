@@ -8,9 +8,10 @@ import {
   Key, 
   RefreshCcw,
   Activity,
-  Tag,
   History,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  BarChart3
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -49,35 +50,41 @@ export const AgentDashboard: React.FC = () => {
   const enAttente = stats?.visitesEnAttente || 0;
   
   const chartData = [
-    { name: '08h', visites: 2 },
-    { name: '10h', visites: Math.floor(totalVisites * 0.3) },
-    { name: '12h', visites: Math.floor(totalVisites * 0.6) },
-    { name: '14h', visites: enAttente },
-    { name: '16h', visites: totalVisites },
+    { name: '08h', value: 2 },
+    { name: '10h', value: Math.floor(totalVisites * 0.3) },
+    { name: '12h', value: Math.floor(totalVisites * 0.6) },
+    { name: '14h', value: enAttente },
+    { name: '16h', value: totalVisites },
   ];
 
   const badgesData = [
     { name: 'Occupés', value: stats?.badgesOccupes || 0 },
     { name: 'Libres', value: stats?.badgesLibres || 0 },
   ];
-  const COLORS = ['#ef4444', '#22c55e'];
+  const COLORS = ['#f43f5e', '#10b981']; 
+
+  const occupationPercent = stats 
+    ? Math.round((stats.badgesOccupes / (stats.badgesOccupes + stats.badgesLibres)) * 100) 
+    : 0;
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
       
-      {/* 1. Header avec Bonjour [Nom du Compte] */}
-      <div className="flex justify-between items-end">
+      {/* 1. Header Harmonisé avec Nouvelle Visite */}
+      <div className="flex justify-between items-end border-b border-gray-100 pb-6">
         <div>
-          <p className="text-blue-600 font-black text-xs uppercase tracking-[0.3em] mb-2">Tableau de bord opérationnel</p>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">
+          <p className="text-blue-600 font-black text-[11px] uppercase tracking-[0.3em] mb-2 flex items-center gap-2 leading-none">
+            <TrendingUp size={14} /> Espace Opérationnel
+          </p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-none">
             Bonjour, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{user?.nomComplet || 'Agent'}</span> 👋
           </h1>
         </div>
         <button 
           onClick={handleRefresh}
-          className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all"
+          className="group flex items-center gap-2 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 text-gray-400 hover:text-blue-600 transition-all"
         >
-          <RefreshCcw size={24} className={(statsLoading || visitesLoading) ? 'animate-spin' : ''} />
+          <RefreshCcw size={22} className={(statsLoading || visitesLoading) ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
         </button>
       </div>
 
@@ -125,7 +132,7 @@ export const AgentDashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 'bold'}} />
                 <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'}} />
-                <Area type="monotone" dataKey="visites" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorVisites)" />
+                <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorVisites)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -133,7 +140,7 @@ export const AgentDashboard: React.FC = () => {
 
         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 relative">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center"><Tag size={20} /></div>
+            <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center"><BarChart3 size={20} /></div>
             <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">État du stock badges</h3>
           </div>
           <div className="h-[250px] w-full relative">
@@ -146,8 +153,8 @@ export const AgentDashboard: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-4">
-               <span className="text-[10px] font-black text-gray-400 uppercase">Total</span>
-               <span className="text-3xl font-black text-gray-800 tracking-tighter">{(stats?.badgesOccupes || 0) + (stats?.badgesLibres || 0)}</span>
+               <span className="text-3xl font-black text-gray-800 tracking-tighter">{occupationPercent}%</span>
+               <span className="text-[10px] font-black text-gray-400 uppercase">Occupés</span>
             </div>
           </div>
         </div>
@@ -155,8 +162,8 @@ export const AgentDashboard: React.FC = () => {
 
       {/* 4. Liste des Visites Actives */}
       <section className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-          <h3 className="text-base font-black text-gray-800 uppercase tracking-widest">Dernières activités</h3>
+        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
+          <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Flux opérationnel</h3>
           <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-lg shadow-blue-200 uppercase">{visites?.length || 0} en cours</span>
         </div>
         <div className="overflow-x-auto text-left">
@@ -174,7 +181,7 @@ export const AgentDashboard: React.FC = () => {
               {visitesLoading ? (
                 <tr><td colSpan={5} className="px-8 py-10 text-center text-gray-400 font-bold">Chargement...</td></tr>
               ) : !visites || visites.length === 0 ? (
-                <tr><td colSpan={5} className="px-8 py-16 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">Aucune visite active pour le moment</td></tr>
+                <tr><td colSpan={5} className="px-8 py-16 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">Aucune visite active</td></tr>
               ) : (
                 visites.map((v: any) => (
                   <tr key={v.id} className="hover:bg-blue-50/20 transition-colors group">
@@ -184,7 +191,7 @@ export const AgentDashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-8 py-5">
-                       <p className="font-black text-gray-800 text-sm uppercase">{v.visiteurNom} {v.visiteurPrenom}</p>
+                       <p className="font-black text-gray-800 text-sm uppercase tracking-tight">{v.visiteurNom} {v.visiteurPrenom}</p>
                        <p className="text-[9px] text-blue-500 font-black uppercase tracking-tighter">{v.visiteurType}</p>
                     </td>
                     <td className="px-8 py-5 text-xs text-gray-600 font-black uppercase tracking-tighter italic">{v.serviceNom}</td>

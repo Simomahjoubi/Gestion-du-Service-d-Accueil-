@@ -12,17 +12,28 @@ import {
   CreditCard,
   UserPlus,
   Briefcase,
-  MapPin
+  MapPin,
+  ArrowRight,
+  X
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
+import { referenceService, ReferenceItem } from '../../services/referenceService';
 
 export const NouvelleVisitePage: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // References states
+  const [refTypes, setRefTypes] = useState<ReferenceItem[]>([]);
+  const [refGrades, setRefGrades] = useState<ReferenceItem[]>([]);
+  const [refAffectations, setRefAffectations] = useState<ReferenceItem[]>([]);
+  const [refAssurances, setRefAssurances] = useState<ReferenceItem[]>([]);
+  const [refSituations, setRefSituations] = useState<ReferenceItem[]>([]);
 
   // Services & Motifs states
   const [services, setServices] = useState<Service[]>([]);
@@ -31,7 +42,7 @@ export const NouvelleVisitePage: React.FC = () => {
   const [selectedMotifId, setSelectedMotifId] = useState<string>('');
 
   // Form states
-  const [searchType, setSearchType] = useState('CIN'); // CIN, ADHESION, NOM
+  const [searchType, setSearchType] = useState('CIN'); 
   const [searchId, setSearchId] = useState('');
   const [searchResults, setSearchResults] = useState<Visitor[]>([]);
   const [foundVisitor, setFoundVisitor] = useState<Visitor | null>(null);
@@ -39,74 +50,80 @@ export const NouvelleVisitePage: React.FC = () => {
   const [isVip, setIsVip] = useState(false);
   const [notes, setNotes] = useState('');
 
-  // Charger les services au démarrage
+  // New Visitor Form State
+  const [newVisitor, setNewVisitor] = useState<Partial<Visitor>>({
+    type: 'ADHERENT_NON_DECLARE',
+    nom: '',
+    prenom: '',
+    cin: '',
+    telephone: '',
+    sexe: 'MONSIEUR',
+    situationFamiliale: '',
+    typeAdherentDetail: '',
+    grade: '',
+    affectation: '',
+    typeAssurance: ''
+  });
+
+  // Charger toutes les données initiales
   useEffect(() => {
-    const fetchServices = async () => {
+    const fetchData = async () => {
       try {
-        const data = await serviceService.getAll();
-        setServices(data);
+        const [svcs, refs] = await Promise.all([
+          serviceService.getAll(),
+          referenceService.getAll()
+        ]);
+        setServices(svcs);
+        setRefTypes(refs.TYPE_DETAIL || []);
+        setRefGrades(refs.GRADE || []);
+        setRefAffectations(refs.AFFECTATION || []);
+        setRefAssurances(refs.TYPE_ASSURANCE || []);
+        setRefSituations(refs.SITUATION_FAMILIALE || []);
+        
+        // Initialiser les valeurs par défaut
+        if (refs.TYPE_DETAIL?.length) setNewVisitor(v => ({...v, typeAdherentDetail: refs.TYPE_DETAIL[0].valeur}));
+        if (refs.GRADE?.length) setNewVisitor(v => ({...v, grade: refs.GRADE[0].valeur}));
+        if (refs.AFFECTATION?.length) setNewVisitor(v => ({...v, affectation: refs.AFFECTATION[0].valeur}));
+        if (refs.TYPE_ASSURANCE?.length) setNewVisitor(v => ({...v, typeAssurance: refs.TYPE_ASSURANCE[0].valeur}));
+        if (refs.SITUATION_FAMILIALE?.length) setNewVisitor(v => ({...v, situationFamiliale: refs.SITUATION_FAMILIALE[0].valeur}));
       } catch (err) {
-        console.error("Erreur chargement services", err);
+        console.error("Erreur chargement données", err);
       }
     };
-    fetchServices();
+    fetchData();
   }, []);
 
   // Charger les motifs quand le service change
   useEffect(() => {
     if (selectedServiceId) {
-      const fetchMotifs = async () => {
-        try {
-          const data = await serviceService.getMotifs(selectedServiceId);
-          setMotifs(data);
-          setSelectedMotifId(''); // Reset motif selection
-        } catch (err) {
-          console.error("Erreur chargement motifs", err);
-        }
-      };
-      fetchMotifs();
+      serviceService.getMotifs(selectedServiceId).then(setMotifs);
+      setSelectedMotifId(''); 
     } else {
       setMotifs([]);
     }
   }, [selectedServiceId]);
   
-  // Recherche réelle via API
   const handleSearch = async () => {
     setLoading(true);
     setError('');
     setSearchResults([]);
-    setFoundVisitor(null);
-    
     try {
       let results: Visitor[] = [];
       if (searchType === 'CIN') {
-        try {
-          const v = await visiteurService.rechercherParCin(searchId);
-          if (v) results = [v];
-        } catch (e: any) {
-          if (e.response?.status !== 404) throw e;
-        }
+        const v = await visiteurService.rechercherParCin(searchId);
+        if (v) results = [v];
       } else if (searchType === 'ADHESION') {
-        try {
-          const v = await visiteurService.rechercherParNumAdhesion(searchId);
-          if (v) results = [v];
-        } catch (e: any) {
-          if (e.response?.status !== 404) throw e;
-        }
+        const v = await visiteurService.rechercherParNumAdhesion(searchId);
+        if (v) results = [v];
       } else {
         results = await visiteurService.rechercherParNom(searchId);
       }
 
-      if (results.length === 0) {
-        setError('Aucun visiteur trouvé.');
-      } else if (results.length === 1) {
-        setFoundVisitor(results[0]);
-        setStep(2);
-      } else {
-        setSearchResults(results);
-      }
+      if (results.length === 0) setError('Aucun résultat trouvé.');
+      else if (results.length === 1) { setFoundVisitor(results[0]); setStep(2); }
+      else setSearchResults(results);
     } catch (err) {
-      setError('Erreur lors de la recherche du visiteur.');
+      setError('Visiteur introuvable.');
     } finally {
       setLoading(false);
     }
@@ -117,17 +134,28 @@ export const NouvelleVisitePage: React.FC = () => {
     setStep(2);
   };
 
+  const handleCreateAndContinue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const created = await visiteurService.creer(newVisitor as Visitor);
+      setFoundVisitor(created);
+      setShowAddModal(false);
+      setStep(2);
+    } catch (err) {
+      alert("Erreur création visiteur.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId) {
-      alert("Veuillez sélectionner un service.");
-      return;
-    }
-    alert(`Visite enregistrée ! Badge B001 attribué à ${foundVisitor?.nom}. Notification envoyée au staff.`);
+    if (!selectedServiceId) return alert("Choisir un service.");
+    alert(`Visite enregistrée pour ${foundVisitor?.nom}.`);
     navigate('/agent');
   };
 
-  // Helper pour les icônes
   const getServiceIcon = (name: string) => {
     const n = name.toLowerCase();
     if (n.includes('estivage')) return <Star size={20}/>;
@@ -142,234 +170,226 @@ export const NouvelleVisitePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-        <button 
-          onClick={() => step === 1 ? navigate('/agent') : setStep(1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
-        >
+        <button onClick={() => step === 1 ? navigate('/agent') : setStep(1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-700 font-bold transition-all">
           <ChevronLeft size={20} />
-          <span className="font-bold">{step === 1 ? 'Retour au tableau de bord' : 'Changer de visiteur'}</span>
+          <span className="text-[13px] uppercase tracking-widest">{step === 1 ? 'Retour' : 'Changer de visiteur'}</span>
         </button>
       </div>
 
       {step === 1 ? (
-        /* ÉTAPE 1 : RECHERCHE NORMALE */
-        <section className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-800">Identifier le visiteur</h1>
-            <p className="text-gray-500 text-sm mt-1">Veuillez entrer les informations d'identification</p>
-          </div>
-
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Rechercher par</label>
-                <select 
-                  value={searchType}
-                  onChange={(e) => setSearchType(e.target.value)}
-                  className="w-full border-gray-200 rounded-lg py-3 bg-gray-50 font-medium"
-                >
-                  <option value="CIN">CIN</option>
-                  <option value="ADHESION">N° Adhésion</option>
-                  <option value="NOM">Nom / Prénom</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Valeur</label>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    value={searchId}
-                    onChange={(e) => setSearchId(e.target.value)}
-                    placeholder="Entrez l'identifiant..."
-                    className="w-full border-gray-200 rounded-lg py-3 pl-10 font-medium"
-                  />
-                  <Search className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                </div>
-              </div>
+        /* RECHERCHE */
+        <div className="space-y-6">
+          <section className="bg-white p-10 rounded-2xl shadow-sm border border-gray-100">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Identification</h1>
+              <p className="text-gray-500 text-sm">Entrer les informations du visiteur</p>
             </div>
 
-            {searchResults.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Résultats trouvés</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {searchResults.map(v => (
-                    <div key={v.id} onClick={() => selectVisitor(v)} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-transparent hover:border-blue-500 cursor-pointer transition-all">
-                      <span className="font-bold text-gray-700">{v.nom} {v.prenom}</span>
-                      <span className="text-xs text-gray-400 font-bold uppercase">CIN: {v.cin}</span>
-                    </div>
-                  ))}
+            <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex-1 space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Type & Valeur</label>
+                <div className="flex bg-gray-50 rounded-xl border border-gray-200 overflow-hidden focus-within:border-blue-500 transition-all">
+                  <select value={searchType} onChange={e => setSearchType(e.target.value)} className="bg-transparent border-r border-gray-200 py-3 px-4 font-bold text-gray-700 text-xs uppercase focus:ring-0">
+                    <option value="CIN">CIN</option>
+                    <option value="ADHESION">ADH</option>
+                    <option value="NOM">NOM</option>
+                  </select>
+                  <input type="text" value={searchId} onChange={e => setSearchId(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSearch()} placeholder="Saisir ici..." className="flex-1 bg-transparent py-3 px-4 font-bold text-sm focus:ring-0 border-none" />
                 </div>
               </div>
-            )}
-
-            {error && <p className="text-center text-red-500 text-sm font-bold">{error}</p>}
-
-            <div className="flex justify-center pt-4">
-              <button 
-                onClick={handleSearch} 
-                disabled={loading || !searchId}
-                className="bg-blue-600 text-white px-10 py-3 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 shadow-md"
-              >
-                {loading ? 'Recherche...' : 'Rechercher le visiteur'}
+              <button onClick={handleSearch} disabled={loading || !searchId} className="h-[50px] bg-blue-600 text-white px-8 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50">
+                {loading ? '...' : 'Chercher'}
+              </button>
+              <button onClick={() => setShowAddModal(true)} className="h-[50px] bg-emerald-600 text-white px-8 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2">
+                <UserPlus size={16} /> Nouveau
               </button>
             </div>
-          </div>
-        </section>
+            {error && <p className="mt-4 text-center text-red-500 font-bold text-xs uppercase">{error}</p>}
+          </section>
+
+          {searchResults.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {searchResults.map(v => (
+                <div key={v.id} onClick={() => selectVisitor(v)} className="bg-white p-5 rounded-xl border border-gray-100 hover:border-blue-500 shadow-sm cursor-pointer flex items-center justify-between transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 font-black group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                      {v.nom.charAt(0)}{v.prenom.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-blue-600 uppercase">{v.type}</p>
+                      <h4 className="text-sm font-bold text-gray-800 uppercase">{v.nom} {v.prenom}</h4>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">CIN: {v.cin}</p>
+                    </div>
+                  </div>
+                  <ArrowRight size={18} className="text-gray-300 group-hover:text-blue-500" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
-        /* ÉTAPE 2 : FORMULAIRE NORMAL AVEC PERSONNALISATIONS */
+        /* FORMULAIRE ETAPE 2 */
         <div className="space-y-8">
-          
-          {/* 1. LES 4 CARTES DÉDIÉES (Style StatCard) */}
-          {foundVisitor?.type === 'ADHERENT' && (
+          {(foundVisitor?.type === 'ADHERENT' || foundVisitor?.type === 'ADHERENT_NON_DECLARE') && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'Budget Général'} icon={<Users size={24}/>} color="bg-sky-500" />
-              <StatCard title="Grade actuel" value={foundVisitor.grade || 'Administrateur'} icon={<Briefcase size={24}/>} color="bg-violet-500" />
-              <StatCard title="Affectation" value={foundVisitor.affectation || 'Rabat'} icon={<MapPin size={24}/>} color="bg-teal-500" />
-              <StatCard title="Assurance" value={foundVisitor.typeAssurance || 'MI/FH2'} icon={<ShieldCheck size={24}/>} color="bg-amber-500" />
+              <StatCard title="Type Adhérent" value={foundVisitor.typeAdherentDetail || '---'} icon={<Users size={24}/>} color="bg-slate-500" />
+              <StatCard title="Grade" value={foundVisitor.grade || '---'} icon={<Briefcase size={24}/>} color="bg-indigo-500" />
+              <StatCard title="Affectation" value={foundVisitor.affectation || '---'} icon={<MapPin size={24}/>} color="bg-sky-600" />
+              <StatCard title="Assurance" value={foundVisitor.typeAssurance || '---'} icon={<ShieldCheck size={24}/>} color="bg-violet-600" />
             </div>
           )}
 
-          {/* 2. SECTION PROFIL NORMALE AVEC PHOTO LARGE */}
           <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-              {/* PHOTO LARGE */}
-              <div className="shrink-0">
-                <div className="w-32 h-32 bg-slate-800 text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg">
-                  {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
-                </div>
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="shrink-0 w-32 h-32 bg-slate-800 text-white rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg">
+                {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
               </div>
-
-              {/* AUTRES INFORMATIONS */}
-              <div className="flex-1 w-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    {foundVisitor?.nom} {foundVisitor?.prenom}
-                  </h2>
-                  <span className="bg-slate-100 text-slate-700 text-[10px] font-black px-2 py-0.5 rounded uppercase">{foundVisitor?.type}</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">CIN</p>
-                    <p className="font-bold text-gray-700">{foundVisitor?.cin || 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Téléphone</p>
-                    <p className="font-bold text-gray-700">{foundVisitor?.telephone || 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sexe</p>
-                    <p className="font-bold text-gray-700 uppercase">{foundVisitor?.sexe || 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Famille</p>
-                    <p className="font-bold text-gray-700 uppercase">{foundVisitor?.situationFamiliale || 'N/A'}</p>
-                  </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-gray-800 uppercase mb-4">{foundVisitor?.nom} {foundVisitor?.prenom}</h2>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 uppercase">
+                  <InfoItem label="CIN" value={foundVisitor?.cin} />
+                  <InfoItem label="Téléphone" value={foundVisitor?.telephone} />
+                  <InfoItem label="Sexe" value={foundVisitor?.sexe} />
+                  <InfoItem label="Famille" value={foundVisitor?.situationFamiliale} />
                 </div>
               </div>
             </div>
           </section>
 
-          {/* 3. FORMULAIRE DE VISITE STANDARD */}
           <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-2">Détails de la visite</h2>
-
+            <h2 className="text-lg font-bold text-gray-800 mb-6 uppercase tracking-tight border-b border-gray-100 pb-2">Enregistrement Visite</h2>
             <form onSubmit={handleRegister} className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                {/* Services */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Choisir le service</label>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">1. Destination</label>
                   <div className="grid grid-cols-2 gap-3">
                     {services.map(s => (
-                      <div 
-                        key={s.id}
-                        onClick={() => setSelectedServiceId(s.id)}
-                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          selectedServiceId === s.id 
-                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm' 
-                            : 'border-gray-50 bg-gray-50 text-gray-500 hover:border-gray-200'
-                        }`}
-                      >
-                        <div className={`${selectedServiceId === s.id ? 'text-blue-600' : 'text-gray-400'}`}>
-                          {getServiceIcon(s.nom)}
-                        </div>
-                        <span className="font-bold text-xs truncate uppercase">{s.nom}</span>
+                      <div key={s.id} onClick={() => setSelectedServiceId(s.id)} className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedServiceId === s.id ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm' : 'border-gray-50 bg-gray-50 text-gray-400 hover:border-gray-200'}`}>
+                        {getServiceIcon(s.nom)}
+                        <span className="font-bold text-[11px] uppercase truncate">{s.nom}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Motifs & Options */}
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Motif de la visite</label>
-                    <select 
-                      value={selectedMotifId}
-                      onChange={(e) => setSelectedMotifId(e.target.value)}
-                      required
-                      className="w-full border-gray-200 rounded-lg py-3 bg-gray-50 font-bold"
-                    >
-                      <option value="">Sélectionnez un motif...</option>
-                      {motifs.map(m => (
-                        <option key={m.id} value={m.id}>{m.libelleFr.toUpperCase()}</option>
-                      ))}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">2. Motif</label>
+                    <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} required className="w-full border-gray-200 rounded-lg py-3 px-4 font-bold bg-gray-50 text-sm focus:ring-blue-500">
+                      <option value="">CHOISIR UN MOTIF...</option>
+                      {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr.toUpperCase()}</option>)}
                     </select>
                   </div>
-
                   <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-100">
                     <div className="flex items-center gap-3">
                       <Star size={24} className={isVip ? "text-yellow-500 fill-yellow-500" : "text-yellow-200"} />
-                      <p className="text-sm font-bold text-yellow-800 uppercase">Priorité VIP</p>
+                      <p className="text-xs font-black text-yellow-800 uppercase">Priorité VIP</p>
                     </div>
-                    <input 
-                      type="checkbox"
-                      checked={isVip}
-                      onChange={(e) => setIsVip(e.target.checked)}
-                      className="w-6 h-6 rounded text-yellow-600 border-yellow-300 focus:ring-yellow-500"
-                    />
+                    <input type="checkbox" checked={isVip} onChange={e => setIsVip(e.target.checked)} className="w-5 h-5 rounded text-yellow-600 border-yellow-300" />
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Notes (Optionnel)</label>
-                    <textarea 
-                      rows={3}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="w-full border-gray-200 rounded-lg p-4 font-medium bg-gray-50"
-                      placeholder="Précisions..."
-                    ></textarea>
-                  </div>
+                  <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} className="w-full border-gray-200 rounded-lg p-4 font-medium bg-gray-50 text-sm" placeholder="Notes (Optionnel)..."></textarea>
                 </div>
               </div>
-
-              <div className="pt-6 border-t border-gray-50 flex justify-end">
-                <button 
-                  type="submit"
-                  className="bg-slate-800 text-white px-10 py-3 rounded-lg font-bold hover:bg-slate-900 transition-all flex items-center gap-3 shadow-lg"
-                >
-                  <ClipboardList size={20} />
-                  Valider l'arrivée
+              <div className="flex justify-end pt-6 border-t border-gray-50">
+                <button type="submit" className="bg-slate-800 text-white px-12 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 shadow-lg flex items-center gap-3 transition-all">
+                  <ClipboardList size={20} /> Valider l'arrivée
                 </button>
               </div>
             </form>
           </section>
         </div>
       )}
+
+      {/* MODAL AJOUT PROFESSIONNEL */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-black text-gray-800 uppercase tracking-tight">Nouveau Profil</h2>
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAndContinue} className="flex-1 overflow-y-auto p-8 space-y-8">
+              <div className="flex gap-4 p-1 bg-gray-100 rounded-xl">
+                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'ADHERENT_NON_DECLARE'})} className={`flex-1 py-3 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${newVisitor.type === 'ADHERENT_NON_DECLARE' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>Adhérent</button>
+                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'EXTERNE'})} className={`flex-1 py-3 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${newVisitor.type === 'EXTERNE' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'}`}>Externe</button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <FormField label="Nom" value={newVisitor.nom} onChange={v => setNewVisitor({...newVisitor, nom: v})} required />
+                <FormField label="Prénom" value={newVisitor.prenom} onChange={v => setNewVisitor({...newVisitor, prenom: v})} required />
+                <FormField label="CIN" value={newVisitor.cin} onChange={v => setNewVisitor({...newVisitor, cin: v})} />
+                <FormField label="Téléphone" value={newVisitor.telephone} onChange={v => setNewVisitor({...newVisitor, telephone: v})} />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sexe</label>
+                  <select value={newVisitor.sexe} onChange={e => setNewVisitor({...newVisitor, sexe: e.target.value})} className="w-full border-gray-200 rounded-xl py-3 px-4 font-bold bg-gray-50 text-sm">
+                    <option value="MONSIEUR">Monsieur</option>
+                    <option value="MADAME">Madame</option>
+                    <option value="MADEMOISELLE">Mademoiselle</option>
+                  </select>
+                </div>
+                <SelectField label={newVisitor.type === 'EXTERNE' ? "Type Externe" : "Situation"} value={newVisitor.situationFamiliale} options={refSituations} onChange={v => setNewVisitor({...newVisitor, situationFamiliale: v})} />
+              </div>
+
+              {newVisitor.type === 'ADHERENT_NON_DECLARE' && (
+                <div className="pt-6 border-t border-gray-100 space-y-6 animate-in slide-in-from-top">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <SelectField label="Type Adhérent" value={newVisitor.typeAdherentDetail} options={refTypes} onChange={v => setNewVisitor({...newVisitor, typeAdherentDetail: v})} />
+                    <SelectField label="Grade" value={newVisitor.grade} options={refGrades} onChange={v => setNewVisitor({...newVisitor, grade: v})} />
+                    <SelectField label="Affectation" value={newVisitor.affectation} options={refAffectations} onChange={v => setNewVisitor({...newVisitor, affectation: v})} />
+                    <SelectField label="Assurance" value={newVisitor.typeAssurance} options={refAssurances} onChange={v => setNewVisitor({...newVisitor, typeAssurance: v})} />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-50">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-3 font-bold text-gray-400 text-xs uppercase">Annuler</button>
+                <button type="submit" disabled={loading} className="px-10 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 flex items-center gap-2">
+                  {loading ? '...' : 'Valider le profil'} <ArrowRight size={16} />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+/* COMPOSANTS FORMULAIRE */
+const FormField: React.FC<{ label: string, value?: string, onChange: (v: string) => void, required?: boolean }> = ({ label, value, onChange, required }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <input required={required} type="text" value={value || ''} onChange={e => onChange(e.target.value)} className="w-full border-gray-200 rounded-xl py-3 px-4 font-bold bg-gray-50 text-sm focus:ring-blue-500 focus:bg-white transition-all" />
+  </div>
+);
+
+const SelectField: React.FC<{ label: string, value?: string, options: ReferenceItem[], onChange: (v: string) => void }> = ({ label, value, options, onChange }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <select value={value || ''} onChange={e => onChange(e.target.value)} className="w-full border-gray-200 rounded-xl py-3 px-4 font-bold bg-gray-50 text-sm focus:ring-blue-500 focus:bg-white transition-all">
+      {options.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur.toUpperCase()}</option>)}
+    </select>
+  </div>
+);
+
+const InfoItem: React.FC<{ label: string, value?: string }> = ({ label, value }) => (
+  <div className="space-y-1">
+    <p className="text-[10px] font-bold text-gray-400 tracking-widest">{label}</p>
+    <p className="font-bold text-gray-700 text-sm">{value || '---'}</p>
+  </div>
+);
+
 const StatCard: React.FC<{ title: string, value: string, icon: React.ReactNode, color: string }> = ({ title, value, icon, color }) => (
-  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-5">
-    <div className={`${color} text-white p-4 rounded-lg shadow-md shrink-0`}>
-      {icon}
-    </div>
+  <div className={`${color} p-6 rounded-xl shadow-md border border-white/10 flex items-center gap-5 text-white transition-transform hover:scale-[1.02]`}>
+    <div className="bg-white/20 p-4 rounded-lg shadow-inner flex items-center justify-center shrink-0">{icon}</div>
     <div className="min-w-0">
-      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">{title}</p>
-      <p className="text-lg font-bold text-gray-800 truncate uppercase">{value}</p>
+      <p className="text-[10px] text-white/80 uppercase font-black tracking-widest mb-1">{title}</p>
+      <p className="text-base font-bold text-white truncate uppercase">{value}</p>
     </div>
   </div>
 );
