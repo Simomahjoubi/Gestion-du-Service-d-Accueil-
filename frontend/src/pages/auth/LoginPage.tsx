@@ -128,7 +128,7 @@ export const LoginPage: React.FC = () => {
         <div className="w-full md:w-1/2 p-10 flex flex-col items-center justify-center bg-white">
           <div className="mb-8 w-full flex justify-center">
             <img 
-              src="/logoarfr.jpg?v=2" 
+              src="/logoarfr.jpg?v=3" 
               alt="Logo Fondation" 
               className="w-72" 
             />
