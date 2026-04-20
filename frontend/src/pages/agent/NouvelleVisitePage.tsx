@@ -19,6 +19,7 @@ import {
   QrCode,
   Keyboard,
   Camera,
+  AlertCircle,
   Phone,
   Hash,
   User
@@ -190,8 +191,8 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId) return alert("Veuillez sélectionner un service de destination.");
-    alert(`Visite enregistrée avec succès pour ${foundVisitor?.nom}.`);
+    if (!selectedServiceId) return alert("Choisir un service.");
+    alert(`Visite enregistrée pour ${foundVisitor?.nom}.`);
     navigate('/agent');
   };
 
@@ -209,250 +210,236 @@ export const NouvelleVisitePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10 max-w-7xl mx-auto pb-20 font-sans">
+    <div className="space-y-6 max-w-7xl mx-auto pb-20 font-sans">
       {/* Header Harmonisé */}
-      <div className="flex items-center justify-between border-b-2 border-gray-100 pb-6">
-        <button onClick={() => step === 1 ? navigate('/agent') : setStep(1)} className="flex items-center gap-3 text-slate-500 hover:text-blue-700 font-bold transition-all bg-white px-5 py-2.5 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <button onClick={() => step === 1 ? navigate('/agent') : setStep(1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-700 font-bold transition-all">
           <ChevronLeft size={20} />
-          <span className="text-[12px] uppercase tracking-[0.1em]">{step === 1 ? 'Retour au Tableau de Bord' : 'Changer de Visiteur'}</span>
+          <span className="text-[13px] uppercase tracking-widest">{step === 1 ? 'Retour au tableau de bord' : 'Changer de profil'}</span>
         </button>
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${step >= 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-gray-100 text-gray-400'}`}>1</div>
-          <div className={`w-12 h-1 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-100'} rounded-full`}></div>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${step >= 2 ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-gray-100 text-gray-400'}`}>2</div>
-        </div>
       </div>
 
       {step === 1 ? (
-        /* ÉTAPE 1 : RECHERCHE MODERNE AVEC QR CODE (FULL SIZE) */
-        <div className="space-y-10 py-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Identification du Visiteur</h1>
-            <p className="text-slate-400 font-medium tracking-wide">Bureau d'accueil - Fondation Hassan II</p>
-          </div>
+        /* ÉTAPE 1 : RECHERCHE HARMONISÉE */
+        <div className="space-y-6">
+          <section className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-gray-800 uppercase tracking-tight leading-none">Identification du Visiteur</h1>
+              <p className="text-gray-500 text-xs mt-2 uppercase tracking-wider font-semibold">Bureau d'accueil</p>
+            </div>
 
-          <section className="bg-white rounded-3xl shadow-xl shadow-slate-100 border border-slate-100 overflow-hidden">
-            {/* Tabs Modes */}
-            <div className="flex border-b border-slate-100 bg-slate-50/50">
+            {/* Tabs de recherche */}
+            <div className="flex bg-gray-50 p-1 rounded-xl mb-8 max-w-md mx-auto border border-gray-100">
                <button 
                 onClick={() => setSearchTypeMode('MANUAL')}
-                className={`flex-1 py-5 flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest transition-all ${searchMode === 'MANUAL' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 py-2 flex items-center justify-center gap-2 font-bold text-[11px] uppercase tracking-widest rounded-lg transition-all ${searchMode === 'MANUAL' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400'}`}
                >
-                 <Keyboard size={18} /> Saisie Manuelle
+                 <Keyboard size={14} /> Manuel
                </button>
                <button 
                 onClick={() => setSearchTypeMode('QR')}
-                className={`flex-1 py-5 flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest transition-all ${searchMode === 'QR' ? 'bg-white text-blue-700 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 py-2 flex items-center justify-center gap-2 font-bold text-[11px] uppercase tracking-widest rounded-lg transition-all ${searchMode === 'QR' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400'}`}
                >
-                 <QrCode size={18} /> Scan QR Code
+                 <QrCode size={14} /> Scan QR
                </button>
             </div>
 
-            <div className="p-12">
+            <div className="max-w-3xl mx-auto">
               {searchMode === 'MANUAL' ? (
-                <div className="max-w-3xl mx-auto space-y-8">
-                  <div className="flex flex-col md:flex-row gap-4 items-end bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                    <div className="md:w-1/3 space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Type de document</label>
-                      <select value={searchType} onChange={e => setSearchType(e.target.value)} className="w-full border-gray-200 rounded-xl py-3.5 px-4 font-bold text-slate-700 bg-white text-xs uppercase focus:ring-blue-500 transition-shadow shadow-sm">
-                        <option value="CIN">Carte Nationale (CIN)</option>
-                        <option value="ADHESION">N° Adhésion Fondation</option>
-                        <option value="NOM">Nom du Visiteur</option>
+                <div className="flex flex-col md:flex-row gap-3 items-end">
+                  <div className="flex-1 space-y-2">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Recherche par</label>
+                    <div className="flex bg-gray-50 rounded-xl border border-gray-200 overflow-hidden focus-within:border-blue-500 transition-all">
+                      <select value={searchType} onChange={e => setSearchType(e.target.value)} className="bg-transparent border-r border-gray-200 py-3 px-4 font-bold text-gray-700 text-xs uppercase focus:ring-0">
+                        <option value="CIN">CIN</option>
+                        <option value="ADHESION">ADH</option>
+                        <option value="NOM">NOM</option>
                       </select>
+                      <input type="text" value={searchId} onChange={e => setSearchId(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSearch()} placeholder="Saisir la valeur..." className="flex-1 bg-transparent py-3 px-4 font-bold text-sm focus:ring-0 border-none" />
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Référence / Identifiant</label>
-                      <div className="relative">
-                        <input type="text" value={searchId} onChange={e => setSearchId(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSearch()} placeholder="Saisir ici..." className="w-full border-gray-200 rounded-xl py-3.5 pl-10 pr-4 font-bold text-base focus:ring-blue-500 shadow-sm" />
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                      </div>
-                    </div>
-                    <button onClick={() => handleSearch()} disabled={loading || !searchId} className="h-[54px] bg-slate-900 text-white px-10 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50 shadow-lg shadow-slate-200 flex items-center gap-3">
-                      {loading ? 'Recherche...' : 'Vérifier'}
-                    </button>
                   </div>
-                  
-                  <div className="flex items-center gap-6 justify-center">
-                    <div className="h-px flex-1 bg-slate-100"></div>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Ou enregistrer un nouveau</p>
-                    <div className="h-px flex-1 bg-slate-100"></div>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <button onClick={() => setShowAddModal(true)} className="flex items-center gap-3 px-10 py-4 bg-white border-2 border-emerald-500 text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all shadow-sm">
-                      <UserPlus size={18} /> Nouveau Visiteur
-                    </button>
-                  </div>
+                  <button onClick={() => handleSearch()} disabled={loading || !searchId} className="h-[46px] bg-blue-600 text-white px-8 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50">
+                    {loading ? '...' : 'Chercher'}
+                  </button>
+                  <button onClick={() => setShowAddModal(true)} className="h-[46px] bg-emerald-600 text-white px-8 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2">
+                    <UserPlus size={14} /> Ajouter
+                  </button>
                 </div>
               ) : (
                 /* Scanner QR */
-                <div className="max-w-xl mx-auto text-center space-y-8">
-                   <div className="p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 relative overflow-hidden">
-                      <div id="qr-reader" className="w-full overflow-hidden rounded-2xl border-none shadow-inner bg-black min-h-[300px]"></div>
-                      <div className="mt-6 flex items-center justify-center gap-3 text-slate-500">
-                         <Camera size={20} className="animate-pulse" />
-                         <p className="text-xs font-bold uppercase tracking-widest">Caméra d'accueil active</p>
+                <div className="max-w-md mx-auto text-center space-y-4">
+                   <div className="p-3 bg-slate-900 rounded-2xl border-4 border-slate-800 shadow-xl overflow-hidden relative">
+                      <div id="qr-reader" className="w-full overflow-hidden rounded-xl border-none bg-black min-h-[250px]"></div>
+                      <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                         <Camera size={10} /> EN DIRECT
                       </div>
                    </div>
-                   <p className="text-sm font-medium text-slate-400">Présentez le QR Code de la carte d'adhésion ou du badge devant la caméra</p>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Scanner le code d'adhésion</p>
                 </div>
               )}
-              {error && <p className="mt-8 text-center text-red-500 font-bold text-xs uppercase animate-bounce">{error}</p>}
+              {error && (
+                <div className="mt-6 flex items-center justify-center gap-2 text-red-500 font-bold text-xs uppercase bg-red-50 py-3 rounded-lg border border-red-100">
+                   <AlertCircle size={14} /> {error}
+                </div>
+              )}
             </div>
           </section>
 
-          {/* RÉSULTATS MULTIPLES STYLE ADMINISTRATIF */}
+          {/* Résultats de recherche harmonisés */}
           {searchResults.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-bottom duration-500">
               {searchResults.map(v => (
-                <div key={v.id} onClick={() => selectVisitor(v)} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-blue-500 hover:shadow-2xl transition-all group flex items-center justify-between cursor-pointer">
-                  <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-xl font-black group-hover:bg-blue-600 transition-colors">
+                <div key={v.id} onClick={() => selectVisitor(v)} className="bg-white p-5 rounded-xl border border-gray-100 hover:border-blue-500 shadow-sm cursor-pointer flex items-center justify-between transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 font-bold group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                       {v.nom.charAt(0)}{v.prenom.charAt(0)}
                     </div>
                     <div>
-                      <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-black uppercase rounded border border-blue-100 mb-1">{v.type}</span>
-                      <h4 className="text-[17px] font-bold text-slate-800 uppercase leading-none mb-1">{v.nom} {v.prenom}</h4>
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">CIN: {v.cin}</p>
+                      <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-black uppercase rounded border border-blue-100 mb-0.5">{v.type}</span>
+                      <h4 className="text-[14px] font-bold text-gray-800 uppercase leading-none mb-1">{v.nom} {v.prenom}</h4>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">CIN: {v.cin}</p>
                     </div>
                   </div>
-                  <ArrowRight size={22} className="text-gray-200 group-hover:text-blue-500 transition-colors" />
+                  <ArrowRight size={18} className="text-gray-300 group-hover:text-blue-500" />
                 </div>
               ))}
             </div>
           )}
         </div>
       ) : (
-        /* ÉTAPE 2 : FICHE VISITE RESTAURÉE (VERSION PHOTO GÉANTE) */
-        <div className="space-y-8 animate-in fade-in duration-500">
+        /* ÉTAPE 2 : FICHE VISITE HARMONISÉE */
+        <div className="space-y-6 animate-in fade-in duration-500">
           
-          {/* 1. LES 4 CARTES DÉDIÉES (Couleurs Bardin) */}
+          {/* 1. LES 4 CARTES DÉDIÉES (Couleurs Bardin/Froid - Style StatCard Harmonisé) */}
           {(foundVisitor?.type === 'ADHERENT' || foundVisitor?.type === 'ADHERENT_NON_DECLARE') && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <InfoCard title="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'Budget Général'} icon={<Users size={28}/>} color="bg-slate-500" />
-              <Card label="Grade actuel" value={foundVisitor.grade || 'Administrateur'} icon={<Briefcase size={28}/>} color="violet" />
-              <Card label="Affectation" value={foundVisitor.affectation || 'Rabat'} icon={<MapPin size={28}/>} color="teal" />
-              <Card label="Assurance" value={foundVisitor.typeAssurance || 'MI/FH2'} icon={<ShieldCheck size={28}/>} color="orange" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard title="Type Adhérent" value={foundVisitor.typeAdherentDetail || '---'} icon={<Users size={20}/>} color="bg-slate-500" />
+              <StatCard title="Grade actuel" value={foundVisitor.grade || '---'} icon={<Briefcase size={20}/>} color="bg-indigo-500" />
+              <StatCard title="Affectation" value={foundVisitor.affectation || '---'} icon={<MapPin size={20}/>} color="bg-sky-600" />
+              <StatCard title="Assurance" value={foundVisitor.typeAssurance || '---'} icon={<ShieldCheck size={20}/>} color="bg-violet-600" />
             </div>
           )}
 
-          {/* 2. SECTION PROFIL AVEC PHOTO GÉANTE */}
-          <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
-            <div className="flex flex-col md:flex-row items-center gap-12">
-              {/* PHOTO GÉANTE */}
+          {/* 2. SECTION PROFIL HARMONISÉE AVEC PHOTO LARGE */}
+          <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
+              {/* PHOTO LARGE */}
               <div className="shrink-0">
-                <div className="w-56 h-56 bg-slate-800 text-white rounded-[3rem] flex items-center justify-center text-6xl font-black shadow-2xl border-8 border-slate-50 rotate-3">
+                <div className="w-40 h-40 bg-slate-800 text-white rounded-2xl flex items-center justify-center text-4xl font-black shadow-xl border-4 border-white ring-1 ring-gray-100">
                   {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
                 </div>
               </div>
 
-              {/* AUTRES INFORMATIONS (STRUCTURE LISTE) */}
-              <div className="flex-1 space-y-8">
-                <div>
-                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2 leading-none">
+              {/* AUTRES INFORMATIONS */}
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-3 mb-6 border-b border-gray-50 pb-4">
+                  <h2 className="text-2xl font-bold text-gray-800 uppercase">
                     {foundVisitor?.nom} {foundVisitor?.prenom}
                   </h2>
-                  <span className="bg-slate-900 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-[0.2em]">
-                    {foundVisitor?.type}
-                  </span>
+                  <span className="bg-slate-100 text-slate-700 text-[10px] font-black px-2 py-0.5 rounded uppercase border border-slate-200">{foundVisitor?.type}</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                        <Hash size={24} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CIN / Identifiant</p>
-                        <p className="text-xl font-black text-slate-800">{foundVisitor?.cin || 'N/A'}</p>
-                      </div>
-                   </div>
-
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                        <Phone size={24} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Téléphonique</p>
-                        <p className="text-xl font-black text-slate-800">{foundVisitor?.telephone || 'Non renseigné'}</p>
-                      </div>
-                   </div>
-
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                        <User size={24} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sexe / Genre</p>
-                        <p className="text-xl font-black text-slate-800 uppercase">{foundVisitor?.sexe || 'N/A'}</p>
-                      </div>
-                   </div>
-
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                        <Users size={24} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Situation Familiale</p>
-                        <p className="text-xl font-black text-slate-800 uppercase">{foundVisitor?.situationFamiliale || 'N/A'}</p>
-                      </div>
-                   </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 uppercase">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">CIN / Identifiant</p>
+                    <p className="text-[15px] font-bold text-gray-700">{foundVisitor?.cin || '---'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Téléphone</p>
+                    <p className="text-[15px] font-bold text-gray-700">{foundVisitor?.telephone || '---'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Sexe / Genre</p>
+                    <p className="text-[15px] font-bold text-gray-700 uppercase">{foundVisitor?.sexe || '---'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Situation Familiale</p>
+                    <p className="text-[15px] font-bold text-gray-700 uppercase">{foundVisitor?.situationFamiliale || '---'}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* 3. FORMULAIRE DE VISITE STANDARD */}
-          <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
-            <h3 className="text-2xl font-black text-slate-900 mb-10 flex items-center gap-3 uppercase tracking-tight leading-none">
-              <ClipboardList className="text-blue-600" size={32} />
-              Enregistrer la Visite
-            </h3>
+          {/* 3. FORMULAIRE DE VISITE STANDARD HARMONISÉ */}
+          <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <h2 className="text-lg font-bold text-gray-800 mb-6 border-b border-gray-100 pb-2 uppercase tracking-tight">Détails de la visite</h2>
 
-            <form onSubmit={handleRegister} className="space-y-12">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <div>
-                  <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">1. Service Destinataire</label>
-                  <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleRegister} className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {/* Services */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">1. Choisir le service</label>
+                  <div className="grid grid-cols-2 gap-3">
                     {services.map(s => (
-                      <div key={s.id} onClick={() => setSelectedServiceId(s.id)} className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all ${selectedServiceId === s.id ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md' : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'}`}>
-                        {getServiceIcon(s.nom)}
-                        <span className="font-black text-sm uppercase truncate">{s.nom}</span>
+                      <div 
+                        key={s.id}
+                        onClick={() => setSelectedServiceId(s.id)}
+                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          selectedServiceId === s.id 
+                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-sm' 
+                            : 'border-gray-50 bg-gray-50 text-gray-500 hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`${selectedServiceId === s.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                          {getServiceIcon(s.nom)}
+                        </div>
+                        <span className="font-bold text-[11px] truncate uppercase tracking-tighter">{s.nom}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="space-y-8">
+                {/* Motifs & Options */}
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">2. Motif de Présentation</label>
-                    <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} required className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 font-black text-lg focus:ring-blue-500 bg-slate-50">
-                      <option value="">CHOISIR UN MOTIF...</option>
-                      {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr.toUpperCase()}</option>)}
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">2. Motif de la visite</label>
+                    <select 
+                      value={selectedMotifId}
+                      onChange={(e) => setSelectedMotifId(e.target.value)}
+                      required
+                      className="w-full border-gray-200 rounded-lg py-3 px-4 font-bold bg-gray-50 text-sm focus:ring-blue-500"
+                    >
+                      <option value="">Sélectionnez un motif...</option>
+                      {motifs.map(m => (
+                        <option key={m.id} value={m.id}>{m.libelleFr.toUpperCase()}</option>
+                      ))}
                     </select>
                   </div>
 
-                  <div className="flex items-center justify-between p-6 bg-amber-50/50 rounded-2xl border-2 border-amber-100 shadow-sm">
-                    <div className="flex items-center gap-4">
-                      <Star size={32} className={isVip ? "text-amber-500 fill-amber-500" : "text-amber-200"} />
-                      <div>
-                        <p className="text-lg font-black text-amber-800 uppercase leading-none tracking-tight">Priorité VIP</p>
-                        <p className="text-[10px] text-yellow-600 font-bold uppercase mt-1">Traitement prioritaire</p>
-                      </div>
+                  <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+                    <div className="flex items-center gap-3 text-yellow-800">
+                      <Star size={22} className={isVip ? "fill-yellow-500" : ""} />
+                      <p className="text-[11px] font-bold uppercase tracking-tight">Priorité VIP / Traitement Urgent</p>
                     </div>
-                    <input type="checkbox" checked={isVip} onChange={e => setIsVip(e.target.checked)} className="w-10 h-10 rounded-xl text-yellow-600 border-yellow-300 focus:ring-yellow-500" />
+                    <input 
+                      type="checkbox"
+                      checked={isVip}
+                      onChange={(e) => setIsVip(e.target.checked)}
+                      className="w-6 h-6 rounded text-yellow-600 border-yellow-300 focus:ring-yellow-500"
+                    />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">3. Observations</label>
-                    <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} className="w-full border-2 border-slate-100 rounded-2xl p-6 font-bold text-lg focus:ring-blue-500 bg-slate-50" placeholder="Notes complémentaires..."></textarea>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">3. Notes (Optionnel)</label>
+                    <textarea 
+                      rows={2}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="w-full border-gray-200 rounded-lg p-4 font-medium bg-gray-50 text-sm focus:ring-blue-500"
+                      placeholder="Commentaires..."
+                    ></textarea>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-10 border-t border-slate-50 flex justify-end">
-                <button type="submit" className="bg-slate-800 text-white px-20 py-6 rounded-3xl font-black text-2xl hover:bg-black transition-all flex items-center gap-6 shadow-2xl uppercase tracking-widest">
-                  <ClipboardList size={32} /> Valider l'Arrivée
+              <div className="pt-6 border-t border-gray-50 flex justify-end">
+                <button 
+                  type="submit"
+                  className="bg-slate-800 text-white px-10 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-slate-900 transition-all flex items-center gap-3 shadow-lg"
+                >
+                  <ClipboardList size={18} />
+                  Valider l'arrivée
                 </button>
               </div>
             </form>
@@ -460,82 +447,54 @@ export const NouvelleVisitePage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL AJOUT PROFESSIONNEL */}
+      {/* MODAL AJOUT PROFESSIONNEL HARMONISÉE */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
-            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Nouveau Dossier Visiteur</h2>
-              <button onClick={() => setShowAddModal(false)} className="p-2.5 hover:bg-white rounded-full border border-transparent hover:border-slate-200 transition-all">
-                <X size={20} className="text-slate-400" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">Nouveau Profil</h2>
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all">
+                <X size={20} className="text-gray-400" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateAndContinue} className="flex-1 overflow-y-auto p-10 space-y-10">
-              <div className="flex gap-4 p-1.5 bg-slate-100 rounded-2xl max-w-md mx-auto shadow-inner">
-                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'ADHERENT_NON_DECLARE'})} className={`flex-1 py-3 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${newVisitor.type === 'ADHERENT_NON_DECLARE' ? 'bg-white text-blue-700 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Adhérent</button>
-                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'EXTERNE'})} className={`flex-1 py-3 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${newVisitor.type === 'EXTERNE' ? 'bg-white text-purple-700 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Externe</button>
+            <form onSubmit={handleCreateAndContinue} className="flex-1 overflow-y-auto p-8 space-y-8">
+              <div className="flex gap-4 p-1 bg-gray-100 rounded-xl max-w-sm mx-auto">
+                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'ADHERENT_NON_DECLARE'})} className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${newVisitor.type === 'ADHERENT_NON_DECLARE' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>Adhérent</button>
+                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'EXTERNE'})} className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${newVisitor.type === 'EXTERNE' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'}`}>Externe</button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-                <FormField label="Nom Patronyme" value={newVisitor.nom} onChange={v => setNewVisitor({...newVisitor, nom: v})} required />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <FormField label="Nom" value={newVisitor.nom} onChange={v => setNewVisitor({...newVisitor, nom: v})} required />
                 <FormField label="Prénom" value={newVisitor.prenom} onChange={v => setNewVisitor({...newVisitor, prenom: v})} required />
-                <FormField label="N° CIN / Passeport" value={newVisitor.cin} onChange={v => setNewVisitor({...newVisitor, cin: v})} />
-                <FormField label="Contact Téléphonique" value={newVisitor.telephone} onChange={v => setNewVisitor({...newVisitor, telephone: v})} />
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Sexe Civil</label>
-                  <select value={newVisitor.sexe} onChange={e => setNewVisitor({...newVisitor, sexe: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all">
-                    <option value="MONSIEUR">MONSIEUR</option>
-                    <option value="MADAME">MADAME</option>
-                    <option value="MADEMOISELLE">MADEMOISELLE</option>
+                <FormField label="CIN / Identifiant" value={newVisitor.cin} onChange={v => setNewVisitor({...newVisitor, cin: v})} />
+                <FormField label="Téléphone" value={newVisitor.telephone} onChange={v => setNewVisitor({...newVisitor, telephone: v})} />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Sexe</label>
+                  <select value={newVisitor.sexe} onChange={e => setNewVisitor({...newVisitor, sexe: e.target.value})} className="w-full border-gray-200 rounded-xl py-3 px-4 font-bold bg-gray-50 text-sm">
+                    <option value="MONSIEUR">Monsieur</option>
+                    <option value="MADAME">Madame</option>
+                    <option value="MADEMOISELLE">Mademoiselle</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{newVisitor.type === 'EXTERNE' ? "Type Externe" : "Situation Civile"}</label>
-                  <select value={newVisitor.situationFamiliale || ''} onChange={e => setNewVisitor({...newVisitor, situationFamiliale: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
-                    {refSituations.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
-                  </select>
-                </div>
+                <SelectField label={newVisitor.type === 'EXTERNE' ? "Type Externe" : "Situation"} value={newVisitor.situationFamiliale} options={refSituations} onChange={v => setNewVisitor({...newVisitor, situationFamiliale: v})} />
               </div>
 
               {newVisitor.type === 'ADHERENT_NON_DECLARE' && (
-                <div className="pt-10 border-t border-slate-100 space-y-10 animate-in slide-in-from-top duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Catégorie Adhérent</label>
-                      <select value={newVisitor.typeAdherentDetail || ''} onChange={e => setNewVisitor({...newVisitor, typeAdherentDetail: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
-                        {refTypes.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
-                      </select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Grade / Échelle</label>
-                      <select value={newVisitor.grade || ''} onChange={e => setNewVisitor({...newVisitor, grade: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
-                        {refGrades.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Lieu d'Affectation</label>
-                      <select value={newVisitor.affectation || ''} onChange={e => setNewVisitor({...newVisitor, affectation: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
-                        {refAffectations.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Régime d'Assurance</label>
-                      <select value={newVisitor.typeAssurance || ''} onChange={e => setNewVisitor({...newVisitor, typeAssurance: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
-                        {refAssurances.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
-                      </select>
-                    </div>
+                <div className="pt-6 border-t border-gray-100 space-y-6 animate-in slide-in-from-top">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <SelectField label="Type Adhérent" value={newVisitor.typeAdherentDetail} options={refTypes} onChange={v => setNewVisitor({...newVisitor, typeAdherentDetail: v})} />
+                    <SelectField label="Grade" value={newVisitor.grade} options={refGrades} onChange={v => setNewVisitor({...newVisitor, grade: v})} />
+                    <SelectField label="Affectation" value={newVisitor.affectation} options={refAffectations} onChange={v => setNewVisitor({...newVisitor, affectation: v})} />
+                    <SelectField label="Assurance" value={newVisitor.typeAssurance} options={refAssurances} onChange={v => setNewVisitor({...newVisitor, typeAssurance: v})} />
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-end gap-6 pt-6 border-t border-slate-100">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-10 py-4 font-black text-slate-400 text-xs uppercase tracking-widest hover:text-slate-600 transition-colors">Annuler la Saisie</button>
-                <button type="submit" disabled={loading} className="px-12 py-4 bg-blue-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-blue-200 flex items-center gap-4 hover:bg-blue-800 transition-all">
-                  {loading ? 'Traitement...' : 'Générer la Fiche Visiteur'} <ArrowRight size={18} />
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-50">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-3 font-bold text-gray-400 text-xs uppercase tracking-widest">Annuler</button>
+                <button type="submit" disabled={loading} className="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-100 flex items-center gap-2">
+                  {loading ? '...' : 'Valider le profil'} <ArrowRight size={16} />
                 </button>
               </div>
             </form>
@@ -546,41 +505,32 @@ export const NouvelleVisitePage: React.FC = () => {
   );
 };
 
-/* COMPOSANTS DÉDIÉS GÉANTS */
+/* COMPOSANTS HARMONISÉS */
 
-const InfoCard: React.FC<{ title: string, value: string, icon: React.ReactNode, color: string }> = ({ title, value, icon, color }) => (
-  <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-xl transition-all">
-    <div className={`${color} text-white p-5 rounded-2xl shadow-lg shrink-0 group-hover:scale-110 transition-transform`}>
+const FormField: React.FC<{ label: string, value?: string, onChange: (v: string) => void, required?: boolean }> = ({ label, value, onChange, required }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <input required={required} type="text" value={value || ''} onChange={e => onChange(e.target.value)} className="w-full border-gray-200 rounded-xl py-3 px-4 font-bold bg-gray-50 text-sm focus:ring-blue-500 focus:bg-white transition-all" />
+  </div>
+);
+
+const SelectField: React.FC<{ label: string, value?: string, options: ReferenceItem[], onChange: (v: string) => void }> = ({ label, value, options, onChange }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+    <select value={value || ''} onChange={e => onChange(e.target.value)} className="w-full border-gray-200 rounded-xl py-3 px-4 font-bold bg-gray-50 text-sm focus:ring-blue-500 focus:bg-white transition-all">
+      {options.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur.toUpperCase()}</option>)}
+    </select>
+  </div>
+);
+
+const StatCard: React.FC<{ title: string, value: string, icon: React.ReactNode, color: string }> = ({ title, value, icon, color }) => (
+  <div className={`bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-5 transition-all hover:shadow-md`}>
+    <div className={`${color} text-white p-4 rounded-lg shadow-md shrink-0`}>
       {icon}
     </div>
     <div className="min-w-0">
       <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{title}</p>
-      <p className="text-xl font-black text-slate-900 truncate uppercase leading-tight">{value}</p>
+      <p className="text-lg font-bold text-gray-800 truncate uppercase leading-none">{value}</p>
     </div>
-  </div>
-);
-
-const Card: React.FC<{ label: string, value: string, icon: React.ReactNode, color: string }> = ({ label, value, icon, color }) => {
-  const colors: Record<string, string> = {
-    sky: "bg-sky-50 border-sky-100 text-sky-700",
-    violet: "bg-violet-50 border-violet-100 text-violet-700",
-    teal: "bg-teal-50 border-teal-100 text-teal-700",
-    orange: "bg-orange-50 border-orange-100 text-orange-700",
-  };
-  return (
-    <div className={`${colors[color]} rounded-3xl p-8 border-2 flex items-center gap-6 shadow-sm group hover:shadow-xl transition-all`}>
-      <div className="bg-white/70 p-4 rounded-2xl shadow-inner shrink-0 group-hover:rotate-6 transition-transform">{icon}</div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">{label}</p>
-        <p className="text-xl font-black text-slate-900 uppercase truncate leading-tight tracking-tighter">{value}</p>
-      </div>
-    </div>
-  );
-};
-
-const FormField: React.FC<{ label: string, value?: string, onChange: (v: string) => void, required?: boolean }> = ({ label, value, onChange, required }) => (
-  <div className="space-y-2">
-    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
-    <input required={required} type="text" value={value || ''} onChange={e => onChange(e.target.value)} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm" />
   </div>
 );
