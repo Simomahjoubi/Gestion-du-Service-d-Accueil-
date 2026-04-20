@@ -17,9 +17,12 @@ import {
   ArrowRight,
   X,
   QrCode,
-  Camera,
   Keyboard,
-  AlertCircle
+  Camera,
+  AlertCircle,
+  Phone,
+  Hash,
+  User
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
@@ -121,12 +124,12 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const onScanSuccess = (decodedText: string) => {
     setSearchId(decodedText);
-    setSearchType('CIN'); // Hypothèse par défaut : le QR contient le CIN
+    setSearchType('CIN'); 
     handleSearch(decodedText, 'CIN');
   };
 
   const onScanError = () => {
-    // Erreur de scan silencieuse
+    // Erreur silencieuse
   };
 
   // Charger les motifs quand le service change
@@ -207,8 +210,8 @@ export const NouvelleVisitePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20 font-sans">
-      {/* Header Institutionnel */}
+    <div className="space-y-10 max-w-7xl mx-auto pb-20 font-sans">
+      {/* Header Harmonisé */}
       <div className="flex items-center justify-between border-b-2 border-gray-100 pb-6">
         <button onClick={() => step === 1 ? navigate('/agent') : setStep(1)} className="flex items-center gap-3 text-slate-500 hover:text-blue-700 font-bold transition-all bg-white px-5 py-2.5 rounded-xl border border-gray-200 shadow-sm">
           <ChevronLeft size={20} />
@@ -222,7 +225,7 @@ export const NouvelleVisitePage: React.FC = () => {
       </div>
 
       {step === 1 ? (
-        /* ÉTAPE 1 : IDENTIFICATION ADMINISTRATIVE */
+        /* ÉTAPE 1 : RECHERCHE MODERNE AVEC QR CODE (FULL SIZE) */
         <div className="space-y-10 py-6">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Identification du Visiteur</h1>
@@ -230,7 +233,7 @@ export const NouvelleVisitePage: React.FC = () => {
           </div>
 
           <section className="bg-white rounded-3xl shadow-xl shadow-slate-100 border border-slate-100 overflow-hidden">
-            {/* Tabs Modes de Recherche */}
+            {/* Tabs Modes */}
             <div className="flex border-b border-slate-100 bg-slate-50/50">
                <button 
                 onClick={() => setSearchTypeMode('MANUAL')}
@@ -283,8 +286,8 @@ export const NouvelleVisitePage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                /* SCANNER QR CODE DESIGN PROFESSIONNEL */
-                <div className="max-w-xl mx-auto space-y-8 text-center">
+                /* Scanner QR */
+                <div className="max-w-xl mx-auto text-center space-y-8">
                    <div className="p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 relative overflow-hidden">
                       <div id="qr-reader" className="w-full overflow-hidden rounded-2xl border-none shadow-inner bg-black min-h-[300px]"></div>
                       <div className="mt-6 flex items-center justify-center gap-3 text-slate-500">
@@ -295,126 +298,162 @@ export const NouvelleVisitePage: React.FC = () => {
                    <p className="text-sm font-medium text-slate-400">Présentez le QR Code de la carte d'adhésion ou du badge devant la caméra</p>
                 </div>
               )}
-
-              {error && (
-                <div className="mt-8 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-center gap-3 text-rose-600 font-bold text-xs uppercase animate-in shake duration-500">
-                   <AlertCircle size={18} /> {error}
-                </div>
-              )}
+              {error && <p className="mt-8 text-center text-red-500 font-bold text-xs uppercase animate-bounce">{error}</p>}
             </div>
           </section>
 
           {/* RÉSULTATS MULTIPLES STYLE ADMINISTRATIF */}
           {searchResults.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-bottom duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom duration-500">
               {searchResults.map(v => (
-                <div key={v.id} onClick={() => selectVisitor(v)} className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-500 hover:shadow-xl shadow-slate-100 cursor-pointer flex items-center justify-between transition-all group">
+                <div key={v.id} onClick={() => selectVisitor(v)} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-blue-500 hover:shadow-2xl transition-all group flex items-center justify-between cursor-pointer">
                   <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 bg-slate-900 text-white rounded-xl flex items-center justify-center text-xl font-black group-hover:bg-blue-600 transition-colors">
+                    <div className="w-16 h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-xl font-black group-hover:bg-blue-600 transition-colors">
                       {v.nom.charAt(0)}{v.prenom.charAt(0)}
                     </div>
                     <div>
                       <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-black uppercase rounded border border-blue-100 mb-1">{v.type}</span>
-                      <h4 className="text-[16px] font-bold text-slate-800 uppercase leading-none mb-1">{v.nom} {v.prenom}</h4>
+                      <h4 className="text-[17px] font-bold text-slate-800 uppercase leading-none mb-1">{v.nom} {v.prenom}</h4>
                       <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">CIN: {v.cin}</p>
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
-                    <ArrowRight size={20} />
-                  </div>
+                  <ArrowRight size={22} className="text-gray-200 group-hover:text-blue-500 transition-colors" />
                 </div>
               ))}
             </div>
           )}
         </div>
       ) : (
-        /* ÉTAPE 2 : FORMULAIRE ENREGISTREMENT HARMONISÉ */
+        /* ÉTAPE 2 : FICHE VISITE RESTAURÉE (VERSION PHOTO GÉANTE) */
         <div className="space-y-8 animate-in fade-in duration-500">
           
-          {/* CARDS PROFESSIONNELLES */}
+          {/* 1. LES 4 CARTES DÉDIÉES (Couleurs Bardin) */}
           {(foundVisitor?.type === 'ADHERENT' || foundVisitor?.type === 'ADHERENT_NON_DECLARE') && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Type de Profil" value={foundVisitor.typeAdherentDetail || '---'} icon={<Users size={22}/>} color="bg-slate-500" />
-              <StatCard title="Grade Actuel" value={foundVisitor.grade || '---'} icon={<Briefcase size={22}/>} color="bg-indigo-500" />
-              <StatCard title="Affectation" value={foundVisitor.affectation || '---'} icon={<MapPin size={22}/>} color="bg-sky-600" />
-              <StatCard title="Couverture" value={foundVisitor.typeAssurance || '---'} icon={<ShieldCheck size={22}/>} color="bg-violet-600" />
+              <InfoCard title="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'Budget Général'} icon={<Users size={28}/>} color="bg-slate-500" />
+              <Card label="Grade actuel" value={foundVisitor.grade || 'Administrateur'} icon={<Briefcase size={28}/>} color="violet" />
+              <Card label="Affectation" value={foundVisitor.affectation || 'Rabat'} icon={<MapPin size={28}/>} color="teal" />
+              <Card label="Assurance" value={foundVisitor.typeAssurance || 'MI/FH2'} icon={<ShieldCheck size={28}/>} color="orange" />
             </div>
           )}
 
-          {/* FICHE PROFIL */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              <div className="shrink-0 w-36 h-36 bg-slate-900 text-white rounded-3xl flex items-center justify-center text-5xl font-black shadow-2xl border-4 border-white ring-1 ring-slate-100">
-                {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
-              </div>
-              <div className="flex-1 text-center md:text-left space-y-6">
-                <div>
-                  <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">{foundVisitor?.nom} {foundVisitor?.prenom}</h2>
-                  <p className="text-blue-600 font-black uppercase text-xs tracking-[0.2em] mt-1">{foundVisitor?.type} - Dossier Actif</p>
+          {/* 2. SECTION PROFIL AVEC PHOTO GÉANTE */}
+          <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
+            <div className="flex flex-col md:flex-row items-center gap-12">
+              {/* PHOTO GÉANTE */}
+              <div className="shrink-0">
+                <div className="w-56 h-56 bg-slate-800 text-white rounded-[3rem] flex items-center justify-center text-6xl font-black shadow-2xl border-8 border-slate-50 rotate-3">
+                  {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 uppercase border-t border-slate-100 pt-6">
-                  <InfoItem label="CIN" value={foundVisitor?.cin} />
-                  <InfoItem label="Téléphone" value={foundVisitor?.telephone} />
-                  <InfoItem label="Sexe" value={foundVisitor?.sexe} />
-                  <InfoItem label="Famille" value={foundVisitor?.situationFamiliale} />
+              </div>
+
+              {/* AUTRES INFORMATIONS (STRUCTURE LISTE) */}
+              <div className="flex-1 space-y-8">
+                <div>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2 leading-none">
+                    {foundVisitor?.nom} {foundVisitor?.prenom}
+                  </h2>
+                  <span className="bg-slate-900 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-[0.2em]">
+                    {foundVisitor?.type}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                        <Hash size={24} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CIN / Identifiant</p>
+                        <p className="text-xl font-black text-slate-800">{foundVisitor?.cin || 'N/A'}</p>
+                      </div>
+                   </div>
+
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                        <Phone size={24} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Téléphonique</p>
+                        <p className="text-xl font-black text-slate-800">{foundVisitor?.telephone || 'Non renseigné'}</p>
+                      </div>
+                   </div>
+
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                        <User size={24} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sexe / Genre</p>
+                        <p className="text-xl font-black text-slate-800 uppercase">{foundVisitor?.sexe || 'N/A'}</p>
+                      </div>
+                   </div>
+
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                        <Users size={24} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Situation Familiale</p>
+                        <p className="text-xl font-black text-slate-800 uppercase">{foundVisitor?.situationFamiliale || 'N/A'}</p>
+                      </div>
+                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* ENREGISTREMENT VISITE */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10">
-            <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
-              <ClipboardList className="text-blue-600" size={24} />
-              <h2 className="text-xl font-bold text-slate-800 uppercase tracking-tight">Ouverture du registre de visite</h2>
-            </div>
-            
+          {/* 3. FORMULAIRE DE VISITE STANDARD */}
+          <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10">
+            <h3 className="text-2xl font-black text-slate-900 mb-10 flex items-center gap-3 uppercase tracking-tight leading-none">
+              <ClipboardList className="text-blue-600" size={32} />
+              Enregistrer la Visite
+            </h3>
+
             <form onSubmit={handleRegister} className="space-y-12">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <div className="space-y-6">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">1. Sélection du Service</label>
+                <div>
+                  <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">1. Service Destinataire</label>
                   <div className="grid grid-cols-2 gap-4">
                     {services.map(s => (
-                      <div key={s.id} onClick={() => setSelectedServiceId(s.id)} className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all ${selectedServiceId === s.id ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md ring-4 ring-blue-50/50' : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-300'}`}>
-                        <div className={`${selectedServiceId === s.id ? 'text-blue-600' : 'text-slate-400'}`}>
-                           {getServiceIcon(s.nom)}
-                        </div>
-                        <span className="font-bold text-[12px] uppercase truncate">{s.nom}</span>
+                      <div key={s.id} onClick={() => setSelectedServiceId(s.id)} className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all ${selectedServiceId === s.id ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md' : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'}`}>
+                        {getServiceIcon(s.nom)}
+                        <span className="font-black text-sm uppercase truncate">{s.nom}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="space-y-8">
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">2. Motif de Présentation</label>
-                    <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} required className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all">
+                  <div>
+                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">2. Motif de Présentation</label>
+                    <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} required className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 font-black text-lg focus:ring-blue-500 bg-slate-50">
                       <option value="">CHOISIR UN MOTIF...</option>
                       {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr.toUpperCase()}</option>)}
                     </select>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-6 bg-amber-50/50 rounded-2xl border-2 border-amber-100">
+
+                  <div className="flex items-center justify-between p-6 bg-amber-50/50 rounded-2xl border-2 border-amber-100 shadow-sm">
                     <div className="flex items-center gap-4">
                       <Star size={32} className={isVip ? "text-amber-500 fill-amber-500" : "text-amber-200"} />
                       <div>
-                        <p className="text-base font-black text-amber-800 uppercase tracking-tighter">Priorité de Traitement</p>
-                        <p className="text-[10px] text-amber-600 font-bold uppercase mt-0.5">Visiteur de haut rang / Urgence</p>
+                        <p className="text-lg font-black text-amber-800 uppercase leading-none tracking-tight">Priorité VIP</p>
+                        <p className="text-[10px] text-yellow-600 font-bold uppercase mt-1">Traitement prioritaire</p>
                       </div>
                     </div>
-                    <input type="checkbox" checked={isVip} onChange={e => setIsVip(e.target.checked)} className="w-8 h-8 rounded-xl text-amber-600 border-amber-300 focus:ring-amber-500 cursor-pointer shadow-sm" />
+                    <input type="checkbox" checked={isVip} onChange={e => setIsVip(e.target.checked)} className="w-10 h-10 rounded-xl text-yellow-600 border-yellow-300 focus:ring-yellow-500" />
                   </div>
-                  
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">3. Observations Administratives</label>
-                    <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} className="w-full border-2 border-slate-100 rounded-xl p-5 font-medium bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all" placeholder="Compléments d'information..."></textarea>
+
+                  <div>
+                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">3. Observations</label>
+                    <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} className="w-full border-2 border-slate-100 rounded-2xl p-6 font-bold text-lg focus:ring-blue-500 bg-slate-50" placeholder="Notes complémentaires..."></textarea>
                   </div>
                 </div>
               </div>
-              
-              <div className="flex justify-end pt-10 border-t border-slate-100">
-                <button type="submit" className="bg-slate-900 text-white px-16 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:bg-black shadow-2xl shadow-slate-200 flex items-center gap-5 transition-all hover:-translate-y-1">
-                  <ClipboardList size={24} /> Enregistrer l'Arrivée
+
+              <div className="pt-10 border-t border-slate-50 flex justify-end">
+                <button type="submit" className="bg-slate-900 text-white px-20 py-6 rounded-3xl font-black text-2xl hover:bg-black transition-all flex items-center gap-6 shadow-2xl uppercase tracking-widest">
+                  <ClipboardList size={32} /> Valider l'Arrivée
                 </button>
               </div>
             </form>
@@ -424,18 +463,10 @@ export const NouvelleVisitePage: React.FC = () => {
 
       {/* MODAL AJOUT PROFESSIONNEL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
-            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-slate-50/50">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
-                  <UserPlus size={24} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-none">Nouveau Profil</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Bureau du Registre des Visiteurs</p>
-                </div>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Nouveau Dossier Visiteur</h2>
               <button onClick={() => setShowAddModal(false)} className="p-2.5 hover:bg-white rounded-full border border-transparent hover:border-slate-200 transition-all">
                 <X size={20} className="text-slate-400" />
               </button>
@@ -443,8 +474,8 @@ export const NouvelleVisitePage: React.FC = () => {
 
             <form onSubmit={handleCreateAndContinue} className="flex-1 overflow-y-auto p-10 space-y-10">
               <div className="flex gap-4 p-1.5 bg-slate-100 rounded-2xl max-w-md mx-auto shadow-inner">
-                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'ADHERENT_NON_DECLARE'})} className={`flex-1 py-3 px-6 rounded-[0.8rem] font-black text-[11px] uppercase tracking-widest transition-all ${newVisitor.type === 'ADHERENT_NON_DECLARE' ? 'bg-white text-blue-700 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Adhérent</button>
-                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'EXTERNE'})} className={`flex-1 py-3 px-6 rounded-[0.8rem] font-black text-[11px] uppercase tracking-widest transition-all ${newVisitor.type === 'EXTERNE' ? 'bg-white text-purple-700 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Externe</button>
+                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'ADHERENT_NON_DECLARE'})} className={`flex-1 py-3 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${newVisitor.type === 'ADHERENT_NON_DECLARE' ? 'bg-white text-blue-700 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Adhérent</button>
+                <button type="button" onClick={() => setNewVisitor({...newVisitor, type: 'EXTERNE'})} className={`flex-1 py-3 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${newVisitor.type === 'EXTERNE' ? 'bg-white text-purple-700 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Externe</button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
@@ -452,19 +483,17 @@ export const NouvelleVisitePage: React.FC = () => {
                 <FormField label="Prénom" value={newVisitor.prenom} onChange={v => setNewVisitor({...newVisitor, prenom: v})} required />
                 <FormField label="N° CIN / Passeport" value={newVisitor.cin} onChange={v => setNewVisitor({...newVisitor, cin: v})} />
                 <FormField label="Contact Téléphonique" value={newVisitor.telephone} onChange={v => setNewVisitor({...newVisitor, telephone: v})} />
-                
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Sexe Civil</label>
-                  <select value={newVisitor.sexe} onChange={e => setNewVisitor({...newVisitor, sexe: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm">
+                  <select value={newVisitor.sexe} onChange={e => setNewVisitor({...newVisitor, sexe: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all">
                     <option value="MONSIEUR">MONSIEUR</option>
                     <option value="MADAME">MADAME</option>
                     <option value="MADEMOISELLE">MADEMOISELLE</option>
                   </select>
                 </div>
-
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{newVisitor.type === 'EXTERNE' ? "Type Externe" : "Situation Civile"}</label>
-                  <select value={newVisitor.situationFamiliale || ''} onChange={e => setNewVisitor({...newVisitor, situationFamiliale: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
+                  <select value={newVisitor.situationFamiliale || ''} onChange={e => setNewVisitor({...newVisitor, situationFamiliale: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
                     {refSituations.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                   </select>
                 </div>
@@ -475,28 +504,25 @@ export const NouvelleVisitePage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Catégorie Adhérent</label>
-                      <select value={newVisitor.typeAdherentDetail || ''} onChange={e => setNewVisitor({...newVisitor, typeAdherentDetail: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
+                      <select value={newVisitor.typeAdherentDetail || ''} onChange={e => setNewVisitor({...newVisitor, typeAdherentDetail: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
                         {refTypes.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
-                    
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Grade / Échelle</label>
-                      <select value={newVisitor.grade || ''} onChange={e => setNewVisitor({...newVisitor, grade: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
+                      <select value={newVisitor.grade || ''} onChange={e => setNewVisitor({...newVisitor, grade: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
                         {refGrades.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
-
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Lieu d'Affectation</label>
-                      <select value={newVisitor.affectation || ''} onChange={e => setNewVisitor({...newVisitor, affectation: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
+                      <select value={newVisitor.affectation || ''} onChange={e => setNewVisitor({...newVisitor, affectation: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
                         {refAffectations.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
-
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Régime d'Assurance</label>
-                      <select value={newVisitor.typeAssurance || ''} onChange={e => setNewVisitor({...newVisitor, typeAssurance: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
+                      <select value={newVisitor.typeAssurance || ''} onChange={e => setNewVisitor({...newVisitor, typeAssurance: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
                         {refAssurances.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
@@ -518,7 +544,37 @@ export const NouvelleVisitePage: React.FC = () => {
   );
 };
 
-/* COMPOSANTS ADMINISTRATIFS */
+/* COMPOSANTS DÉDIÉS GÉANTS */
+
+const InfoCard: React.FC<{ title: string, value: string, icon: React.ReactNode, color: string }> = ({ title, value, icon, color }) => (
+  <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-xl transition-all">
+    <div className={`${color} text-white p-5 rounded-2xl shadow-lg shrink-0 group-hover:scale-110 transition-transform`}>
+      {icon}
+    </div>
+    <div className="min-w-0">
+      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{title}</p>
+      <p className="text-xl font-black text-slate-900 truncate uppercase leading-tight">{value}</p>
+    </div>
+  </div>
+);
+
+const Card: React.FC<{ label: string, value: string, icon: React.ReactNode, color: string }> = ({ label, value, icon, color }) => {
+  const colors: Record<string, string> = {
+    sky: "bg-sky-50 border-sky-100 text-sky-700",
+    violet: "bg-violet-50 border-violet-100 text-violet-700",
+    teal: "bg-teal-50 border-teal-100 text-teal-700",
+    orange: "bg-orange-50 border-orange-100 text-orange-700",
+  };
+  return (
+    <div className={`${colors[color]} rounded-3xl p-8 border-2 flex items-center gap-6 shadow-sm group hover:shadow-xl transition-all`}>
+      <div className="bg-white/70 p-4 rounded-2xl shadow-inner shrink-0 group-hover:rotate-6 transition-transform">{icon}</div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">{label}</p>
+        <p className="text-xl font-black text-slate-900 uppercase truncate leading-tight tracking-tighter">{value}</p>
+      </div>
+    </div>
+  );
+};
 
 const FormField: React.FC<{ label: string, value?: string, onChange: (v: string) => void, required?: boolean }> = ({ label, value, onChange, required }) => (
   <div className="space-y-2">
@@ -530,7 +586,7 @@ const FormField: React.FC<{ label: string, value?: string, onChange: (v: string)
 const InfoItem: React.FC<{ label: string, value?: string }> = ({ label, value }) => (
   <div className="space-y-1">
     <p className="text-[10px] font-black text-slate-400 tracking-widest leading-none">{label}</p>
-    <p className="font-bold text-slate-800 text-lg leading-tight">{value || '---'}</p>
+    <p className="font-bold text-slate-800 text-xl leading-tight">{value || '---'}</p>
   </div>
 );
 
