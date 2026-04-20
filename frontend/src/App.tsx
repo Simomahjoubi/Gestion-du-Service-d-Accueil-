@@ -17,7 +17,12 @@ import { ServiceMotifManagement } from './pages/admin/ServiceMotifManagement';
 import { ReferencesManagement } from './pages/admin/ReferencesManagement';
 import { BadgeManagement } from './pages/admin/BadgeManagement';
 import { ResponsableDashboard } from './pages/responsable/ResponsableDashboard';
+import { ResponsableFileDAttente } from './pages/responsable/ResponsableFileDAttente';
+import { ResponsableRapport } from './pages/responsable/ResponsableRapport';
+import { ResponsableMesVisites } from './pages/responsable/ResponsableMesVisites';
+import { ResponsableLayout } from './layouts/ResponsableLayout';
 import { DirecteurDashboard } from './pages/directeur/DirecteurDashboard';
+import { DirecteurLayout } from './layouts/DirecteurLayout';
 import { MainLayout } from './layouts/MainLayout';
 
 export const App: React.FC = () => {
@@ -53,14 +58,15 @@ export const App: React.FC = () => {
 
         {/* Responsable Routes */}
         <Route element={<ProtectedRoute roles={['RESPONSABLE']} />}>
-          <Route path="/responsable" element={<MainLayout />}>
-             <Route index element={<ResponsableDashboard />} />
-          </Route>
+          <Route path="/responsable" element={<ResponsableLayout><ResponsableDashboard /></ResponsableLayout>} />
+          <Route path="/responsable/mes-visites" element={<ResponsableLayout><ResponsableMesVisites /></ResponsableLayout>} />
+          <Route path="/responsable/file-attente" element={<ResponsableLayout><ResponsableFileDAttente /></ResponsableLayout>} />
+          <Route path="/responsable/rapport" element={<ResponsableLayout><ResponsableRapport /></ResponsableLayout>} />
         </Route>
 
         {/* Directeur Routes */}
         <Route element={<ProtectedRoute roles={['DIRECTEUR']} />}>
-          <Route path="/directeur" element={<MainLayout />}>
+          <Route path="/directeur" element={<DirecteurLayout />}>
              <Route index element={<DirecteurDashboard />} />
           </Route>
         </Route>

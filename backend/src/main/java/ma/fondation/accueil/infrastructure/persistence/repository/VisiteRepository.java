@@ -36,4 +36,25 @@ public interface VisiteRepository extends JpaRepository<Visite, Long> {
 
     @Query("SELECT v FROM Visite v WHERE v.fonctionnaire.id = :id AND v.heureArrivee >= :debut ORDER BY v.heureArrivee DESC")
     List<Visite> findTodayByFonctionnaireId(@Param("id") Long id, @Param("debut") LocalDateTime debut);
+
+    @Query("SELECT v FROM Visite v WHERE v.service.id = :serviceId AND v.statut IN ('EN_ATTENTE','EN_COURS','REAFFECTEE') ORDER BY v.heureArrivee ASC")
+    List<Visite> findActiveByServiceId(@Param("serviceId") Long serviceId);
+
+    @Query("SELECT v FROM Visite v WHERE v.service.id = :serviceId AND v.heureArrivee >= :debut ORDER BY v.heureArrivee DESC")
+    List<Visite> findByServiceIdSince(@Param("serviceId") Long serviceId, @Param("debut") LocalDateTime debut);
+
+    @Query("SELECT v FROM Visite v WHERE v.service.id = :serviceId AND v.heureArrivee >= :debut AND v.heureArrivee < :fin ORDER BY v.heureArrivee DESC")
+    List<Visite> findByServiceIdBetween(@Param("serviceId") Long serviceId, @Param("debut") LocalDateTime debut, @Param("fin") LocalDateTime fin);
+
+    @Query("SELECT COUNT(v) FROM Visite v WHERE v.service.id = :serviceId AND v.statut = 'EN_ATTENTE' AND v.heureArrivee <= :limite")
+    long countAlertesService(@Param("serviceId") Long serviceId, @Param("limite") LocalDateTime limite);
+
+    @Query("SELECT COUNT(v) FROM Visite v WHERE v.service.id = :serviceId AND v.statut IN ('TERMINEE','CLOTUREE') AND v.heureArrivee >= :debut")
+    long countTraiteesService(@Param("serviceId") Long serviceId, @Param("debut") LocalDateTime debut);
+
+    @Query("SELECT v FROM Visite v WHERE v.fonctionnaire.id = :id AND v.statut IN ('TERMINEE','CLOTUREE') AND v.heureArrivee >= :debut")
+    List<Visite> findTraiteesParFonctionnaire(@Param("id") Long id, @Param("debut") LocalDateTime debut);
+
+    @Query("SELECT v FROM Visite v WHERE v.heureArrivee >= :debut AND v.heureArrivee < :fin")
+    List<Visite> findByHeureArriveeBetween(@Param("debut") LocalDateTime debut, @Param("fin") LocalDateTime fin);
 }
