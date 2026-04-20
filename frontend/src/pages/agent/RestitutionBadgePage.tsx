@@ -1,172 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Key, Search, X, RefreshCw, CheckCircle2, Clock,
   LogOut, User, Shield, Tag, Building2, BadgeCheck,
-  BadgeX, Layers, Unlock,
+  BadgeX, Layers, Unlock, ChevronLeft
 } from 'lucide-react';
 import { badgeService, BadgeDetail, ServiceBadgeStat } from '../../services/badgeService';
 
-// ─── Palette service ──────────────────────────────────────────────────────────
-const SVC_GRAD = [
-  'from-blue-600 to-blue-500',   'from-violet-600 to-violet-500',
-  'from-rose-600 to-rose-500',   'from-amber-600 to-amber-500',
-  'from-teal-600 to-teal-500',   'from-pink-600 to-pink-500',
-  'from-indigo-600 to-indigo-500','from-green-600 to-green-500',
-];
 const SVC_TAG = [
-  'bg-blue-100 text-blue-700',   'bg-violet-100 text-violet-700',
-  'bg-rose-100 text-rose-700',   'bg-amber-100 text-amber-700',
-  'bg-teal-100 text-teal-700',   'bg-pink-100 text-pink-700',
-  'bg-indigo-100 text-indigo-700','bg-green-100 text-green-700',
+  'bg-blue-50 text-blue-700 border-blue-100',   
+  'bg-indigo-50 text-indigo-700 border-indigo-100',
+  'bg-slate-50 text-slate-700 border-slate-100',   
+  'bg-emerald-50 text-emerald-700 border-emerald-100',
+  'bg-violet-50 text-violet-700 border-violet-100',   
+  'bg-sky-50 text-sky-700 border-sky-100',
 ];
 
 function fmtDate(iso?: string) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ─── Confirmation modal ───────────────────────────────────────────────────────
-const ConfirmLiberer: React.FC<{
-  badge: BadgeDetail;
-  onConfirm: () => void;
-  onCancel: () => void;
-  loading: boolean;
-}> = ({ badge, onConfirm, onCancel, loading }) => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 p-5 flex items-center gap-3">
-        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-          <Unlock size={20} className="text-white" />
-        </div>
-        <div>
-          <h3 className="text-white font-bold">Restituer le badge</h3>
-          <p className="text-white/70 text-xs">Confirmez la restitution physique</p>
-        </div>
-      </div>
-      <div className="p-6">
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-5 space-y-1.5 text-[12px] text-gray-600">
-          <p className="text-sm font-bold text-gray-800 mb-2">{badge.code} — {badge.serviceNom}</p>
-          <p><span className="text-gray-400">Visiteur :</span> <span className="font-semibold">{badge.visiteurNom ?? '—'}</span></p>
-          <p><span className="text-gray-400">Personnel :</span> <span className="font-semibold">{badge.staffNom ?? '—'}</span></p>
-          <p><span className="text-gray-400">Depuis :</span> <span className="font-semibold">{fmtDate(badge.dateOccupation)}</span></p>
-        </div>
-        <p className="text-sm text-gray-500 mb-5 text-center">
-          Le visiteur a bien rendu le badge <span className="font-bold text-gray-800">{badge.code}</span> ?
-        </p>
-        <div className="flex gap-3">
-          <button onClick={onCancel} disabled={loading}
-            className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50">
-            Annuler
-          </button>
-          <button onClick={onConfirm} disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-sm font-semibold hover:from-emerald-700 hover:to-emerald-600 flex items-center justify-center gap-2 disabled:opacity-60">
-            {loading ? <RefreshCw size={14} className="animate-spin" /> : <Unlock size={14} />}
-            {loading ? 'Traitement…' : 'Confirmer'}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// ─── Badge card ───────────────────────────────────────────────────────────────
-const BadgeCard: React.FC<{
-  badge: BadgeDetail;
-  svcIdx: number;
-  onRestituer: (b: BadgeDetail) => void;
-}> = ({ badge, svcIdx, onRestituer }) => {
-  const grad = SVC_GRAD[svcIdx % SVC_GRAD.length];
-  const tag  = SVC_TAG[svcIdx % SVC_TAG.length];
-  const free = badge.statut === 'DISPONIBLE';
-  const pret = badge.statut === 'PRET_A_RESTITUER';
-
-  return (
-    <div className={`relative bg-white rounded-2xl border-2 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
-      free ? 'border-gray-150 opacity-70 hover:opacity-90' :
-      pret ? 'border-emerald-300 shadow-emerald-100 shadow-md ring-2 ring-emerald-400 ring-offset-1' :
-             'border-rose-200 hover:border-rose-300'
-    }`}>
-      {/* Top stripe */}
-      <div className={`h-1.5 rounded-t-xl ${
-        free ? 'bg-gradient-to-r from-gray-200 to-gray-300' :
-        pret ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
-               'bg-gradient-to-r from-rose-400 to-rose-500'
-      }`} />
-
-      {pret && (
-        <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
-          À restituer
-        </div>
-      )}
-
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shadow-sm`}>
-              <Tag size={15} className="text-white" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-gray-800">{badge.code}</p>
-              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${tag}`}>
-                {badge.serviceNom}
-              </span>
-            </div>
-          </div>
-          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
-            free ? 'bg-gray-100 text-gray-500' :
-            pret ? 'bg-emerald-100 text-emerald-700' :
-                   'bg-rose-100 text-rose-700'
-          }`}>
-            {free ? 'Libre' : pret ? 'Prêt' : 'Occupé'}
-          </span>
-        </div>
-
-        {/* Content */}
-        {free ? (
-          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl">
-            <CheckCircle2 size={13} className="text-gray-400 shrink-0" />
-            <span className="text-xs text-gray-400">Badge disponible</span>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-1.5 mb-3">
-              <InfoRow icon={<User size={11}/>}   label="Visiteur"   value={badge.visiteurNom ?? '—'} />
-              <InfoRow icon={<Shield size={11}/>} label="Personnel"  value={badge.staffNom ?? '—'} />
-              <InfoRow icon={<Clock size={11}/>}  label="Depuis"     value={fmtDate(badge.dateOccupation)} />
-            </div>
-
-            <button
-              onClick={() => onRestituer(badge)}
-              disabled={!pret}
-              className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                pret
-                  ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-              title={pret ? 'Restituer ce badge' : 'En attente de clôture par le fonctionnaire'}
-            >
-              <LogOut size={12} />
-              {pret ? 'Restituer le badge' : 'En attente de clôture'}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="flex items-center gap-2 text-[11px]">
-    <span className="text-gray-400 shrink-0">{icon}</span>
-    <span className="text-gray-400 w-14 shrink-0">{label}</span>
-    <span className="text-gray-700 font-medium truncate">{value}</span>
-  </div>
-);
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
 export const RestitutionBadgePage: React.FC = () => {
+  const navigate = useNavigate();
   const [badges, setBadges]     = useState<BadgeDetail[]>([]);
   const [stats, setStats]       = useState<ServiceBadgeStat[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -190,21 +47,18 @@ export const RestitutionBadgePage: React.FC = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Auto-dismiss toast
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(''), 3000);
     return () => clearTimeout(t);
   }, [toast]);
 
-  const svcIdx = Object.fromEntries(stats.map((s, i) => [s.serviceId, i]));
-
   const handleRestituer = async () => {
     if (!confirm) return;
     setConfirming(true);
     try {
       await badgeService.liberer(confirm.id);
-      setToast(`Badge ${confirm.code} restitué avec succès.`);
+      setToast(`Badge ${confirm.code} libéré avec succès.`);
       setConfirm(null);
       load();
     } catch {
@@ -226,177 +80,241 @@ export const RestitutionBadgePage: React.FC = () => {
     return true;
   });
 
-  const libres  = badges.filter(b => b.statut === 'DISPONIBLE').length;
-  const occupes = badges.filter(b => b.statut === 'OCCUPE').length;
-  const prets   = badges.filter(b => b.statut === 'PRET_A_RESTITUER').length;
+  const statsCounts = {
+    total: badges.length,
+    libres: badges.filter(b => b.statut === 'DISPONIBLE').length,
+    occupes: badges.filter(b => b.statut === 'OCCUPE').length,
+    prets: badges.filter(b => b.statut === 'PRET_A_RESTITUER').length
+  };
 
   return (
-    <div className="p-6 min-h-screen bg-[#f8f9fa]">
-
+    <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
+      
       {/* ── Toast ── */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 bg-emerald-600 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in">
-          <CheckCircle2 size={16} /> {toast}
+        <div className="fixed top-8 right-8 z-50 bg-slate-900 text-white text-xs font-bold px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300 uppercase tracking-widest">
+          <CheckCircle2 size={16} className="text-emerald-400" /> {toast}
         </div>
       )}
 
       {/* ── Header ── */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-400 rounded-2xl flex items-center justify-center shadow-sm">
-          <Key size={22} className="text-white" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Restitution des Badges</h1>
-          <p className="text-xs text-gray-400">Suivi en temps réel · libres, occupés, prêts à restituer</p>
-        </div>
-        <div className="ml-auto">
-          <button onClick={load}
-            className="flex items-center gap-2 bg-white border-2 border-gray-200 hover:border-emerald-300 text-gray-600 hover:text-emerald-600 text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Actualiser
+      <div className="flex items-center justify-between border-b border-gray-100 pb-6">
+        <button onClick={() => navigate('/agent')} className="flex items-center gap-2 text-gray-500 hover:text-blue-700 font-bold transition-all">
+          <ChevronLeft size={20} />
+          <span className="text-[13px] uppercase tracking-widest">Retour au Dashboard</span>
+        </button>
+        <div className="flex items-center gap-4">
+          <button onClick={load} className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>
 
-      {/* ── Stats ── */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <StatCard icon={<Layers size={18}/>}       label="Total"       value={badges.length} color="gray"    />
-        <StatCard icon={<BadgeCheck size={18}/>}   label="Libres"      value={libres}        color="gray"    />
-        <StatCard icon={<BadgeX size={18}/>}       label="Occupés"     value={occupes}       color="rose"    />
-        <StatCard icon={<Unlock size={18}/>}       label="À restituer" value={prets}         color="emerald" />
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold text-gray-800 uppercase tracking-tight">Restitution des Badges</h1>
+        <p className="text-gray-400 text-sm font-medium tracking-wide">Gestion des flux de sortie et libération des accès</p>
       </div>
 
-      {/* ── Service pills ── */}
-      {stats.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-5">
-          <PillBtn active={filterSvc === null} onClick={() => setFilterSvc(null)} grad="">
-            Tous les services
-          </PillBtn>
-          {stats.map((s, i) => (
-            <PillBtn
-              key={s.serviceId}
-              active={filterSvc === s.serviceId}
-              onClick={() => setFilterSvc(filterSvc === s.serviceId ? null : s.serviceId)}
-              grad={SVC_GRAD[i % SVC_GRAD.length]}
-            >
-              <Building2 size={10} /> {s.serviceNom}
-              <span className="text-[9px] opacity-70 ml-1">{s.libres}L·{s.occupes}O</span>
-            </PillBtn>
-          ))}
-        </div>
-      )}
+      {/* ── Stats Section ── */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <HeaderStat label="Total Badges" value={statsCounts.total} icon={<Layers size={20}/>} color="bg-slate-800" />
+        <HeaderStat label="Badges Libres" value={statsCounts.libres} icon={<BadgeCheck size={20}/>} color="bg-emerald-600" />
+        <HeaderStat label="En Visite" value={statsCounts.occupes} icon={<BadgeX size={20}/>} color="bg-rose-600" />
+        <HeaderStat label="Prêts à Sortir" value={statsCounts.prets} icon={<Unlock size={20}/>} color="bg-blue-600" pulse={statsCounts.prets > 0} />
+      </div>
 
       {/* ── Toolbar ── */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Code badge, nom visiteur, service…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-9 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-emerald-400 focus:outline-none bg-white"
-          />
-          {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <X size={14} />
-            </button>
-          )}
+      <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un badge, un visiteur ou un service..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
+            <FilterBtn active={filterStat === 'ALL'} onClick={() => setFilterStat('ALL')}>Tous</FilterBtn>
+            <FilterBtn active={filterStat === 'DISPONIBLE'} onClick={() => setFilterStat('DISPONIBLE')}>Libres</FilterBtn>
+            <FilterBtn active={filterStat === 'OCCUPE'} onClick={() => setFilterStat('OCCUPE')}>Occupés</FilterBtn>
+            <FilterBtn active={filterStat === 'PRET_A_RESTITUER'} onClick={() => setFilterStat('PRET_A_RESTITUER')}>Prêts</FilterBtn>
+          </div>
         </div>
 
-        {/* Status toggle */}
-        <div className="flex bg-white border-2 border-gray-200 rounded-xl overflow-hidden">
-          {(['ALL', 'DISPONIBLE', 'OCCUPE', 'PRET_A_RESTITUER'] as const).map(v => (
-            <button key={v} onClick={() => setFilterStat(v)}
-              className={`px-3 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
-                filterStat === v
-                  ? v === 'DISPONIBLE'       ? 'bg-gray-500 text-white'
-                  : v === 'OCCUPE'           ? 'bg-rose-500 text-white'
-                  : v === 'PRET_A_RESTITUER' ? 'bg-emerald-500 text-white'
-                                             : 'bg-gray-800 text-white'
-                  : 'text-gray-500 hover:bg-gray-50'
-              }`}>
-              {v === 'ALL' ? 'Tous' : v === 'DISPONIBLE' ? 'Libres' : v === 'OCCUPE' ? 'Occupés' : 'À restituer'}
+        {/* Service Pills */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
+          <button 
+            onClick={() => setFilterSvc(null)}
+            className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filterSvc === null ? 'bg-slate-800 text-white shadow-md' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+          >
+            Tous Services
+          </button>
+          {stats.map((s, i) => (
+            <button
+              key={s.serviceId}
+              onClick={() => setFilterSvc(filterSvc === s.serviceId ? null : s.serviceId)}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all ${filterSvc === s.serviceId ? 'bg-blue-600 text-white border-blue-700 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+            >
+              {s.serviceNom}
             </button>
           ))}
         </div>
+      </section>
 
-        <p className="text-xs text-gray-400 ml-auto">
-          {filtered.length} badge{filtered.length !== 1 ? 's' : ''}
-        </p>
-      </div>
-
-      {/* ── Grid ── */}
+      {/* ── Badges Grid ── */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-          <RefreshCw size={32} className="animate-spin mb-3" />
-          <p className="text-sm">Chargement des badges…</p>
+        <div className="py-20 text-center space-y-4">
+          <RefreshCw size={40} className="animate-spin text-blue-600 mx-auto opacity-20" />
+          <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Mise à jour du registre...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-          <Key size={48} className="mb-3 opacity-30" />
-          <p className="text-base font-medium">Aucun badge trouvé</p>
-          <p className="text-sm mt-1">Modifiez vos filtres ou actualisez.</p>
+        <div className="py-24 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-center">
+          <Key size={48} className="mx-auto text-gray-200 mb-4" />
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Aucun badge ne correspond aux critères</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filtered.map(b => (
-            <BadgeCard
-              key={b.id}
-              badge={b}
-              svcIdx={svcIdx[b.serviceId ?? 0] ?? 0}
-              onRestituer={setConfirm}
-            />
+            <div 
+              key={b.id} 
+              className={`bg-white rounded-2xl border-2 transition-all group overflow-hidden ${
+                b.statut === 'DISPONIBLE' ? 'border-gray-100 opacity-60' :
+                b.statut === 'PRET_A_RESTITUER' ? 'border-emerald-500 shadow-xl shadow-emerald-100 ring-4 ring-emerald-50' :
+                'border-gray-200 hover:border-blue-300'
+              }`}
+            >
+              {/* Header de carte */}
+              <div className={`p-4 flex items-center justify-between border-b ${b.statut === 'PRET_A_RESTITUER' ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50/50 border-gray-100'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-sm ${b.statut === 'DISPONIBLE' ? 'bg-white text-gray-400' : 'bg-slate-900 text-white'}`}>
+                    {b.code}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter leading-none mb-1">Service</p>
+                    <p className="text-[11px] font-bold text-gray-800 uppercase truncate max-w-[100px]">{b.serviceNom || 'Global'}</p>
+                  </div>
+                </div>
+                {b.statut === 'PRET_A_RESTITUER' && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>}
+              </div>
+
+              {/* Corps de carte */}
+              <div className="p-5 space-y-4">
+                {b.statut === 'DISPONIBLE' ? (
+                  <div className="py-2 text-center">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Disponible</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><User size={14}/></div>
+                        <p className="text-xs font-bold text-slate-700 truncate">{b.visiteurNom || 'Inconnu'}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><Clock size={14}/></div>
+                        <p className="text-[11px] font-bold text-slate-500">{fmtDate(b.dateOccupation)}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setConfirm(b)}
+                      disabled={b.statut !== 'PRET_A_RESTITUER'}
+                      className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                        b.statut === 'PRET_A_RESTITUER'
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200'
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <LogOut size={14} />
+                      {b.statut === 'PRET_A_RESTITUER' ? 'Restituer' : 'En visite'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* ── Confirm modal ── */}
+      {/* ── Confirmation Modal ── */}
       {confirm && (
-        <ConfirmLiberer
-          badge={confirm}
-          onConfirm={handleRestituer}
-          onCancel={() => setConfirm(null)}
-          loading={confirming}
-        />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-8 border-b border-gray-100 flex items-center gap-5 bg-emerald-50">
+              <div className="w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                <Unlock size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 leading-tight">Confirmation de Sortie</h3>
+                <p className="text-emerald-700 font-bold text-xs uppercase tracking-widest mt-1">Badge {confirm.code}</p>
+              </div>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-4">
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Visiteur</span>
+                    <span className="text-sm font-bold text-slate-800 uppercase">{confirm.visiteurNom}</span>
+                 </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service</span>
+                    <span className="text-sm font-bold text-slate-800 uppercase">{confirm.serviceNom}</span>
+                 </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Durée Visite</span>
+                    <span className="text-sm font-bold text-blue-600">{fmtDate(confirm.dateOccupation)}</span>
+                 </div>
+              </div>
+
+              <p className="text-sm text-gray-500 font-medium text-center px-4">
+                Veuillez confirmer la réception physique du badge avant de libérer l'accès dans le système.
+              </p>
+
+              <div className="flex gap-3">
+                <button onClick={() => setConfirm(null)} disabled={confirming}
+                  className="flex-1 py-4 rounded-2xl border-2 border-gray-100 text-xs font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all">
+                  Annuler
+                </button>
+                <button onClick={handleRestituer} disabled={confirming}
+                  className="flex-1 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black flex items-center justify-center gap-3 transition-all shadow-xl shadow-slate-200">
+                  {confirming ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-const STAT_COL: Record<string, { bg: string; icon: string; val: string }> = {
-  gray:    { bg: 'bg-gray-50 border-gray-200',     icon: 'text-gray-500',    val: 'text-gray-700'    },
-  rose:    { bg: 'bg-rose-50 border-rose-200',     icon: 'text-rose-500',    val: 'text-rose-700'    },
-  emerald: { bg: 'bg-emerald-50 border-emerald-200', icon: 'text-emerald-500', val: 'text-emerald-700' },
-};
+/* --- Helpers Components --- */
 
-const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: number; color: string }> = ({ icon, label, value, color }) => {
-  const c = STAT_COL[color] ?? STAT_COL.gray;
-  return (
-    <div className={`rounded-2xl border-2 p-4 ${c.bg} flex items-center gap-3`}>
-      <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm ${c.icon} shrink-0`}>
-        {icon}
-      </div>
-      <div>
-        <p className={`text-xl font-bold ${c.val}`}>{value}</p>
-        <p className="text-[10px] text-gray-500">{label}</p>
-      </div>
+const HeaderStat: React.FC<{ label: string, value: number, icon: React.ReactNode, color: string, pulse?: boolean }> = ({ label, value, icon, color, pulse }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 relative">
+    <div className={`${color} text-white p-3.5 rounded-xl shadow-lg relative`}>
+      {icon}
+      {pulse && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
     </div>
-  );
-};
+    <div>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-2xl font-bold text-gray-800 leading-none">{value}</p>
+    </div>
+  </div>
+);
 
-const PillBtn: React.FC<{
-  active: boolean; onClick: () => void; grad: string; children: React.ReactNode;
-}> = ({ active, onClick, grad, children }) => (
+const FilterBtn: React.FC<{ active: boolean, onClick: () => void, children: React.ReactNode }> = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border-2 transition-all ${
-      active && grad
-        ? `bg-gradient-to-r ${grad} text-white border-transparent shadow-sm`
-        : active
-        ? 'bg-gray-800 text-white border-gray-800'
-        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+    className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+      active ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'
     }`}
   >
     {children}
