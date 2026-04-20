@@ -124,8 +124,8 @@ export const NouvelleVisitePage: React.FC = () => {
     handleSearch(decodedText, 'CIN');
   };
 
-  const onScanError = (err: any) => {
-    // Erreur de scan silencieuse (souvent pas de QR en vue)
+  const onScanError = () => {
+    // Erreur de scan silencieuse
   };
 
   // Charger les motifs quand le service change
