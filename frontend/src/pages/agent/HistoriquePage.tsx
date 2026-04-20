@@ -4,7 +4,7 @@ import { visiteService } from '../../services/visiteService';
 import { 
   Users, 
   Clock, 
-  ArrowLeft,
+  ChevronLeft,
   Search,
   CheckCircle2,
   Timer,
@@ -17,119 +17,142 @@ export const HistoriquePage: React.FC = () => {
   const { data: visites, isLoading } = useQuery({
     queryKey: ['visites-today'],
     queryFn: () => visiteService.getVisitesToday(),
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 60000, 
   });
+
+  const getStatusLabel = (statut: string) => {
+    switch (statut) {
+      case 'EN_ATTENTE': return { fr: 'En attente', ar: 'في الانتظار' };
+      case 'EN_COURS': return { fr: 'En cours', ar: 'قيد الإجراء' };
+      case 'TERMINEE': return { fr: 'Terminée', ar: 'تمت' };
+      case 'CLOTUREE': return { fr: 'Clôturée', ar: 'مغلقة' };
+      default: return { fr: statut, ar: '' };
+    }
+  };
 
   const getStatusStyle = (statut: string) => {
     switch (statut) {
-      case 'EN_ATTENTE': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'EN_COURS': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'TERMINEE': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'CLOTUREE': return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'EN_ATTENTE': return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'EN_COURS': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'TERMINEE': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'CLOTUREE': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   const getStatusIcon = (statut: string) => {
     switch (statut) {
-      case 'EN_ATTENTE': return <Clock size={14} />;
-      case 'EN_COURS': return <Timer size={14} />;
-      case 'TERMINEE': return <AlertCircle size={14} />;
-      case 'CLOTUREE': return <CheckCircle2 size={14} />;
+      case 'EN_ATTENTE': return <Clock size={12} />;
+      case 'EN_COURS': return <Timer size={12} />;
+      case 'TERMINEE': return <AlertCircle size={12} />;
+      case 'CLOTUREE': return <CheckCircle2 size={12} />;
       default: return null;
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={() => navigate('/agent')}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors font-medium"
-        >
-          <ArrowLeft size={20} /> Retour au tableau de bord
+    <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
+      
+      {/* ── Header Harmonisé ── */}
+      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <button onClick={() => navigate('/agent')} className="flex items-center gap-2 text-gray-500 hover:text-blue-700 font-bold transition-all">
+          <ChevronLeft size={20} />
+          <span className="text-[13px] uppercase tracking-widest text-center flex flex-col items-start leading-none">
+             <span>Retour au Dashboard</span>
+             <span className="font-arabic text-[10px] mt-1">العودة إلى لوحة القيادة</span>
+          </span>
         </button>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input 
             type="text" 
-            placeholder="Rechercher une visite..." 
-            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-64 text-sm"
+            placeholder="Rechercher... | بحث" 
+            className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none w-64 text-sm font-medium transition-all shadow-sm"
           />
         </div>
       </div>
 
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold text-gray-800 uppercase tracking-tight flex justify-between items-center w-full">
+           <span>Historique des Visites</span>
+           <span className="font-arabic text-xl">سجل الزيارات</span>
+        </h1>
+        <p className="text-gray-400 text-sm font-medium tracking-wide italic">Registre quotidien des flux d'accueil | السجل اليومي للاستقبال</p>
+      </div>
+
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-            <Users className="text-blue-600" /> Historique des visites du jour
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+          <h2 className="text-[13px] font-bold text-gray-900 uppercase tracking-widest flex items-center gap-3">
+            <Users className="text-blue-600" size={18} /> Journal du jour | يومية اليوم
           </h2>
-          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-            {visites?.length || 0} Visites
+          <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-bold border border-blue-100 uppercase">
+            {visites?.length || 0} Activités | عمليات
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto text-left">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider font-bold">
-                <th className="px-6 py-4">Heure</th>
-                <th className="px-6 py-4">Visiteur</th>
-                <th className="px-6 py-4">Badge</th>
-                <th className="px-6 py-4">Service / Motif</th>
-                <th className="px-6 py-4">Fonctionnaire</th>
-                <th className="px-6 py-4">Statut</th>
+              <tr className="bg-white text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
+                <th className="px-6 py-4">Heure | وقت</th>
+                <th className="px-6 py-4">Visiteur | زائر</th>
+                <th className="px-6 py-4">Badge | شارة</th>
+                <th className="px-6 py-4">Destination | وجهة</th>
+                <th className="px-6 py-4">Statut | حالة</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                    Chargement des données...
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold text-xs uppercase tracking-widest animate-pulse">
+                    Synchronisation des données... | جاري التحميل
                   </td>
                 </tr>
-              ) : visites?.length === 0 ? (
+              ) : !visites || visites.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                    Aucune visite enregistrée aujourd'hui.
+                  <td colSpan={5} className="px-6 py-16 text-center text-gray-400 font-bold uppercase tracking-widest text-[11px] italic">
+                    Aucune activité enregistrée aujourd'hui | لا توجد بيانات
                   </td>
                 </tr>
               ) : (
-                visites?.map((visite: any) => (
-                  <tr key={visite.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-gray-700">
-                        {new Date(visite.heureArrivee).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900">{visite.visiteurNom}</span>
-                        <span className="text-[10px] text-gray-500 font-medium uppercase">{visite.typeVisiteur}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200">
-                        {visite.badgeCode}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-700 font-medium">{visite.motifLibelle}</span>
-                        <span className="text-[10px] text-blue-600 font-bold">{visite.serviceNom}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600 font-medium">{visite.fonctionnaireNom}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${getStatusStyle(visite.statut)}`}>
-                        {getStatusIcon(visite.statut)}
-                        {visite.statut}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                visites.map((visite: any) => {
+                  const status = getStatusLabel(visite.statut);
+                  return (
+                    <tr key={visite.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-bold text-indigo-600 tabular-nums">
+                          {new Date(visite.heureArrivee).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-[13px] font-bold text-gray-800 uppercase tracking-tight leading-tight">{visite.visiteurNom}</span>
+                          <span className="text-[10px] text-blue-600 font-semibold uppercase">{visite.typeVisiteur}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-black bg-slate-800 text-white shadow-sm">
+                          {visite.badgeCode || '---'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-[12px] text-gray-700 font-bold leading-tight">{visite.motifLibelle?.toUpperCase()}</span>
+                          <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-tighter italic">{visite.serviceNom}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col items-start gap-1">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${getStatusStyle(visite.statut)}`}>
+                            {getStatusIcon(visite.statut)}
+                            {status.fr.toUpperCase()}
+                          </span>
+                          <span className="font-arabic text-[10px] text-gray-400 px-1">{status.ar}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

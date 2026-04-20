@@ -73,11 +73,11 @@ export const AgentDashboard: React.FC = () => {
       {/* 1. Header Harmonisé */}
       <div className="flex justify-between items-end border-b border-gray-100 pb-6">
         <div>
-          <p className="text-blue-600 font-semibold text-[11px] uppercase tracking-[0.2em] mb-2 flex items-center gap-2 leading-none">
-            <TrendingUp size={14} /> Espace Opérationnel
+          <p className="text-blue-600 font-semibold text-[11px] uppercase tracking-[0.3em] mb-2 flex items-center gap-2 leading-none">
+            <TrendingUp size={14} /> Espace Opérationnel | فضاء العمليات
           </p>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight uppercase leading-none">
-            Bonjour, <span className="text-blue-700">{user?.nomComplet || 'Agent'}</span> 👋
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight uppercase leading-none">
+            Bonjour | مرحبا, <span className="text-blue-700">{user?.nomComplet || 'Agent'}</span> 👋
           </h1>
         </div>
         <button 
@@ -92,24 +92,27 @@ export const AgentDashboard: React.FC = () => {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <QuickAction 
             title="Nouvelle Arrivée" 
+            titleAr="وصول جديد"
             icon={<UserPlus size={28} />} 
             onClick={() => navigate('/agent/nouvelle-visite')} 
             color="bg-blue-600"
-            desc="Enregistrer un visiteur"
+            desc="Enregistrer un visiteur | تسجيل زائر جديد"
           />
           <QuickAction 
             title="Sortie Visiteur" 
+            titleAr="خروج زائر"
             icon={<Key size={28} />} 
             onClick={() => navigate('/agent/restitution')} 
             color="bg-indigo-600"
-            desc="Restituer un badge"
+            desc="Restituer un badge | إرجاع الشارة"
           />
           <QuickAction 
             title="Historique Jour" 
+            titleAr="سجل اليوم"
             icon={<History size={28} />} 
             onClick={() => navigate('/agent/historique')} 
             color="bg-slate-700"
-            desc="Journal des visites"
+            desc="Journal des visites | سجل الزيارات"
           />
       </section>
 
@@ -118,7 +121,10 @@ export const AgentDashboard: React.FC = () => {
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><Activity size={18} /></div>
-            <h3 className="text-[13px] font-bold text-gray-700 uppercase tracking-widest">Flux d'accueil actuel</h3>
+            <h3 className="text-[13px] font-bold text-gray-700 uppercase tracking-widest flex justify-between w-full">
+               <span>Flux d'accueil actuel</span>
+               <span className="font-arabic">تدفق الاستقبال الحالي</span>
+            </h3>
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -141,7 +147,10 @@ export const AgentDashboard: React.FC = () => {
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center"><BarChart3 size={18} /></div>
-            <h3 className="text-[13px] font-bold text-gray-700 uppercase tracking-widest">État du stock badges</h3>
+            <h3 className="text-[13px] font-bold text-gray-700 uppercase tracking-widest flex justify-between w-full">
+               <span>État du stock badges</span>
+               <span className="font-arabic">حالة مخزون الشارات</span>
+            </h3>
           </div>
           <div className="h-[250px] w-full relative">
             <ResponsiveContainer width="100%" height="100%">
@@ -154,7 +163,7 @@ export const AgentDashboard: React.FC = () => {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-4">
                <span className="text-2xl font-bold text-gray-800 tracking-tight">{occupationPercent}%</span>
-               <span className="text-[10px] font-semibold text-gray-400 uppercase">Occupés</span>
+               <span className="text-[10px] font-semibold text-gray-400 uppercase">Occupés | مستعملة</span>
             </div>
           </div>
         </div>
@@ -163,25 +172,52 @@ export const AgentDashboard: React.FC = () => {
       {/* 4. Liste des Visites Actives */}
       <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
-          <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-widest">Flux opérationnel</h3>
-          <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-3 py-1 rounded border border-blue-100 uppercase">{visites?.length || 0} en cours</span>
+          <h3 className="text-[13px] font-bold text-gray-900 uppercase tracking-widest flex items-center gap-4">
+             <span>Flux opérationnel</span>
+             <span className="text-gray-400 font-normal">|</span>
+             <span className="font-arabic">سير العمليات</span>
+          </h3>
+          <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-3 py-1 rounded border border-blue-100 uppercase">{visites?.length || 0} en cours | قيد الإجراء</span>
         </div>
         <div className="overflow-x-auto text-left">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-white text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
-                <th className="px-6 py-4">Badge</th>
-                <th className="px-6 py-4">Visiteur</th>
-                <th className="px-6 py-4">Destination</th>
-                <th className="px-6 py-4">Arrivée</th>
-                <th className="px-6 py-4 text-center">État</th>
+                <th className="px-6 py-4 flex flex-col items-start gap-1">
+                   <span>Badge</span>
+                   <span className="font-arabic text-[9px]">شارة</span>
+                </th>
+                <th className="px-6 py-4">
+                   <div className="flex flex-col gap-1">
+                      <span>Visiteur</span>
+                      <span className="font-arabic text-[9px]">زائر</span>
+                   </div>
+                </th>
+                <th className="px-6 py-4">
+                   <div className="flex flex-col gap-1">
+                      <span>Destination</span>
+                      <span className="font-arabic text-[9px]">الوجهة</span>
+                   </div>
+                </th>
+                <th className="px-6 py-4">
+                   <div className="flex flex-col gap-1">
+                      <span>Arrivée</span>
+                      <span className="font-arabic text-[9px]">الوصول</span>
+                   </div>
+                </th>
+                <th className="px-6 py-4 text-center">
+                   <div className="flex flex-col gap-1 items-center">
+                      <span>État</span>
+                      <span className="font-arabic text-[9px]">الحالة</span>
+                   </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {visitesLoading ? (
-                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400 font-bold">Chargement...</td></tr>
+                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400 font-bold">Chargement... | جاري التحميل</td></tr>
               ) : !visites || visites.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-[11px] italic">Aucune visite active</td></tr>
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-[11px] italic">Aucune visite active | لا توجد زيارات نشطة</td></tr>
               ) : (
                 visites.map((v: any) => (
                   <tr key={v.id} className="hover:bg-gray-50/50 transition-colors group">
@@ -214,7 +250,7 @@ export const AgentDashboard: React.FC = () => {
 
 /* COMPOSANT ACTION RAPIDE GÉANT ET CLICKABLE */
 
-const QuickAction: React.FC<{ title: string, desc: string, icon: React.ReactNode, onClick: () => void, color: string }> = ({ title, desc, icon, onClick, color }) => (
+const QuickAction: React.FC<{ title: string, titleAr: string, desc: string, icon: React.ReactNode, onClick: () => void, color: string }> = ({ title, titleAr, desc, icon, onClick, color }) => (
   <button 
     onClick={onClick}
     className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-600 hover:shadow-md transition-all group flex flex-col items-center text-center w-full relative overflow-hidden active:scale-95"
@@ -223,27 +259,33 @@ const QuickAction: React.FC<{ title: string, desc: string, icon: React.ReactNode
     <div className={`w-14 h-14 ${color} text-white rounded-xl flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10`}>
       {icon}
     </div>
-    <div className="relative z-10">
-      <h3 className="text-[16px] font-bold text-gray-900 uppercase tracking-tight mb-1">{title}</h3>
+    <div className="relative z-10 w-full">
+      <div className="flex flex-col gap-1 mb-2">
+         <h3 className="text-[16px] font-bold text-gray-900 uppercase tracking-tight leading-none">{title}</h3>
+         <h3 className="text-[14px] font-arabic text-blue-700 leading-none">{titleAr}</h3>
+      </div>
       <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider leading-relaxed">{desc}</p>
     </div>
     <div className="mt-4 flex items-center gap-1.5 text-blue-700 font-bold text-[11px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-1 group-hover:translate-y-0">
-       Lancer <ArrowRight size={14} />
+       Lancer | ابدأ <ArrowRight size={14} />
     </div>
   </button>
 );
 
 const StatusDot: React.FC<{ status: string }> = ({ status }) => {
-  const configs: Record<string, {label: string, dot: string, bg: string}> = {
-    'EN_ATTENTE': { label: 'En attente', dot: 'bg-orange-500', bg: 'bg-orange-50 text-orange-700 border-orange-100' },
-    'EN_COURS': { label: 'En cours', dot: 'bg-blue-600', bg: 'bg-blue-50 text-blue-700 border-blue-100' },
-    'TERMINEE': { label: 'Terminée', dot: 'bg-emerald-600', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  const configs: Record<string, {label: string, labelAr: string, dot: string, bg: string}> = {
+    'EN_ATTENTE': { label: 'En attente', labelAr: 'في الانتظار', dot: 'bg-orange-500', bg: 'bg-orange-50 text-orange-700 border-orange-100' },
+    'EN_COURS': { label: 'En cours', labelAr: 'قيد الإجراء', dot: 'bg-blue-600', bg: 'bg-blue-50 text-blue-700 border-blue-100' },
+    'TERMINEE': { label: 'Terminée', labelAr: 'تمت', dot: 'bg-emerald-600', bg: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
   };
   const cfg = configs[status] || configs['EN_ATTENTE'];
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${cfg.bg} text-[9px] font-bold uppercase tracking-widest border`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} animate-pulse`} />
-      {cfg.label}
+    <div className="flex flex-col items-center gap-1">
+       <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${cfg.bg} text-[8px] font-bold uppercase tracking-widest border`}>
+         <span className={`w-1 h-1 rounded-full ${cfg.dot} animate-pulse`} />
+         {cfg.label}
+       </div>
+       <span className="font-arabic text-[9px] text-gray-500">{cfg.labelAr}</span>
     </div>
   );
 };
