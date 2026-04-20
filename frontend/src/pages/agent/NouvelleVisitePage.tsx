@@ -19,7 +19,6 @@ import {
   QrCode,
   Keyboard,
   Camera,
-  AlertCircle,
   Phone,
   Hash,
   User
@@ -452,7 +451,7 @@ export const NouvelleVisitePage: React.FC = () => {
               </div>
 
               <div className="pt-10 border-t border-slate-50 flex justify-end">
-                <button type="submit" className="bg-slate-900 text-white px-20 py-6 rounded-3xl font-black text-2xl hover:bg-black transition-all flex items-center gap-6 shadow-2xl uppercase tracking-widest">
+                <button type="submit" className="bg-slate-800 text-white px-20 py-6 rounded-3xl font-black text-2xl hover:bg-black transition-all flex items-center gap-6 shadow-2xl uppercase tracking-widest">
                   <ClipboardList size={32} /> Valider l'Arrivée
                 </button>
               </div>
@@ -504,25 +503,28 @@ export const NouvelleVisitePage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Catégorie Adhérent</label>
-                      <select value={newVisitor.typeAdherentDetail || ''} onChange={e => setNewVisitor({...newVisitor, typeAdherentDetail: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
+                      <select value={newVisitor.typeAdherentDetail || ''} onChange={e => setNewVisitor({...newVisitor, typeAdherentDetail: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
                         {refTypes.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
+                    
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Grade / Échelle</label>
-                      <select value={newVisitor.grade || ''} onChange={e => setNewVisitor({...newVisitor, grade: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
+                      <select value={newVisitor.grade || ''} onChange={e => setNewVisitor({...newVisitor, grade: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
                         {refGrades.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Lieu d'Affectation</label>
-                      <select value={newVisitor.affectation || ''} onChange={e => setNewVisitor({...newVisitor, affectation: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
+                      <select value={newVisitor.affectation || ''} onChange={e => setNewVisitor({...newVisitor, affectation: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
                         {refAffectations.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Régime d'Assurance</label>
-                      <select value={newVisitor.typeAssurance || ''} onChange={e => setNewVisitor({...newVisitor, typeAssurance: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all uppercase">
+                      <select value={newVisitor.typeAssurance || ''} onChange={e => setNewVisitor({...newVisitor, typeAssurance: e.target.value})} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm uppercase">
                         {refAssurances.map(opt => <option key={opt.id} value={opt.valeur}>{opt.valeur}</option>)}
                       </select>
                     </div>
@@ -580,22 +582,5 @@ const FormField: React.FC<{ label: string, value?: string, onChange: (v: string)
   <div className="space-y-2">
     <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
     <input required={required} type="text" value={value || ''} onChange={e => onChange(e.target.value)} className="w-full border-2 border-slate-100 rounded-xl py-4 px-6 font-bold bg-slate-50 text-base focus:ring-blue-500 focus:bg-white transition-all shadow-sm" />
-  </div>
-);
-
-const InfoItem: React.FC<{ label: string, value?: string }> = ({ label, value }) => (
-  <div className="space-y-1">
-    <p className="text-[10px] font-black text-slate-400 tracking-widest leading-none">{label}</p>
-    <p className="font-bold text-slate-800 text-xl leading-tight">{value || '---'}</p>
-  </div>
-);
-
-const StatCard: React.FC<{ title: string, value: string, icon: React.ReactNode, color: string }> = ({ title, value, icon, color }) => (
-  <div className={`${color} p-6 rounded-2xl shadow-xl border border-white/10 flex items-center gap-6 text-white transition-all hover:-translate-y-1`}>
-    <div className="bg-white/20 w-14 h-14 rounded-xl shadow-inner flex items-center justify-center shrink-0">{icon}</div>
-    <div className="min-w-0">
-      <p className="text-[10px] text-white/70 uppercase font-black tracking-widest mb-1">{title}</p>
-      <p className="text-[16px] font-bold text-white truncate uppercase leading-tight">{value}</p>
-    </div>
   </div>
 );
