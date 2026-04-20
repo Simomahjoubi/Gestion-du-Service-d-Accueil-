@@ -18,7 +18,8 @@ import {
   X,
   QrCode,
   Camera,
-  Keyboard
+  Keyboard,
+  AlertCircle
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
