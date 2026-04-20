@@ -1,20 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Key, Search, X, RefreshCw, CheckCircle2, Clock,
-  LogOut, User, Shield, Tag, Building2, BadgeCheck,
+  Key, Search, RefreshCw, CheckCircle2, Clock,
+  LogOut, User, BadgeCheck,
   BadgeX, Layers, Unlock, ChevronLeft
 } from 'lucide-react';
 import { badgeService, BadgeDetail, ServiceBadgeStat } from '../../services/badgeService';
-
-const SVC_TAG = [
-  'bg-blue-50 text-blue-700 border-blue-100',   
-  'bg-indigo-50 text-indigo-700 border-indigo-100',
-  'bg-slate-50 text-slate-700 border-slate-100',   
-  'bg-emerald-50 text-emerald-700 border-emerald-100',
-  'bg-violet-50 text-violet-700 border-violet-100',   
-  'bg-sky-50 text-sky-700 border-sky-100',
-];
 
 function fmtDate(iso?: string) {
   if (!iso) return '—';
@@ -155,7 +146,7 @@ export const RestitutionBadgePage: React.FC = () => {
           >
             Tous Services
           </button>
-          {stats.map((s, i) => (
+          {stats.map((s) => (
             <button
               key={s.serviceId}
               onClick={() => setFilterSvc(filterSvc === s.serviceId ? null : s.serviceId)}
@@ -267,7 +258,7 @@ export const RestitutionBadgePage: React.FC = () => {
                     <span className="text-sm font-bold text-slate-800 uppercase">{confirm.serviceNom}</span>
                  </div>
                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Durée Visite</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Heure Arrivée</span>
                     <span className="text-sm font-bold text-blue-600">{fmtDate(confirm.dateOccupation)}</span>
                  </div>
               </div>
@@ -298,7 +289,7 @@ export const RestitutionBadgePage: React.FC = () => {
 /* --- Helpers Components --- */
 
 const HeaderStat: React.FC<{ label: string, value: number, icon: React.ReactNode, color: string, pulse?: boolean }> = ({ label, value, icon, color, pulse }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 relative">
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 relative text-left">
     <div className={`${color} text-white p-3.5 rounded-xl shadow-lg relative`}>
       {icon}
       {pulse && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
