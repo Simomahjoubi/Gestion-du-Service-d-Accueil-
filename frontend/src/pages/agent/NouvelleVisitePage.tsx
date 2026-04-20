@@ -19,10 +19,7 @@ import {
   QrCode,
   Keyboard,
   Camera,
-  AlertCircle,
-  Phone,
-  Hash,
-  User
+  AlertCircle
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
