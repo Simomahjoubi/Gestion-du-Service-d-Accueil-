@@ -2,9 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
-import { 
-  Clock, ArrowUpRight, Plus, ScanLine, History
-} from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export const AgentDashboard: React.FC = () => {
@@ -103,20 +101,5 @@ export const AgentDashboard: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-const ColdActionButton: React.FC<{ title: string, icon: React.ReactNode, theme: 'blue' | 'teal' | 'slate', onClick: () => void }> = ({ title, icon, theme, onClick }) => {
-  const styles = {
-    blue:   { bg: 'bg-blue-50', text: 'text-blue-700' },
-    teal:   { bg: 'bg-teal-50', text: 'text-teal-700' },
-    slate:  { bg: 'bg-slate-100', text: 'text-slate-700' },
-  };
-  const s = styles[theme];
-  return (
-    <button onClick={onClick} className={`p-5 rounded-lg border border-slate-200 flex items-center gap-4 text-left ${s.bg}`}>
-      <div className={s.text}>{icon}</div>
-      <span className={`text-[13px] font-bold ${s.text}`}>{title}</span>
-    </button>
   );
 };
