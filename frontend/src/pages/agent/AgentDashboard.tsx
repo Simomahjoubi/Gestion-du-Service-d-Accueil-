@@ -3,123 +3,103 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
 import { 
-  Clock, Search, ArrowUpRight, Plus, ScanLine, History, TrendingUp, BarChart3
+  Clock, Search, ArrowUpRight, History, TrendingUp, BarChart3, Plus, ScanLine
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export const AgentDashboard: React.FC = () => {
   const navigate = useNavigate();
-
-  const { data: stats } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: () => visiteService.getStatsToday(),
-    refetchInterval: 30000,
-  });
-
-  const { data: visites } = useQuery({
-    queryKey: ['visites-today'],
-    queryFn: () => visiteService.getVisitesToday(),
-    refetchInterval: 30000,
-  });
+  const { data: stats } = useQuery({ queryKey: ['dashboard-stats'], queryFn: () => visiteService.getStatsToday(), refetchInterval: 30000 });
+  const { data: visites } = useQuery({ queryKey: ['visites-today'], queryFn: () => visiteService.getVisitesToday(), refetchInterval: 30000 });
 
   const chartData = [
-    { name: '08h', value: 2 }, { name: '10h', value: 8 },
-    { name: '12h', value: 15 }, { name: '14h', value: 12 },
-    { name: '16h', value: 20 },
+    { time: '08:00', visitors: 12 }, { time: '10:00', visitors: 28 },
+    { time: '12:00', visitors: 45 }, { time: '14:00', visitors: 32 },
+    { time: '16:00', visitors: 58 }, { time: '18:00', visitors: 25 },
   ];
   
-  const badgesData = [
+  const pieData = [
     { name: 'Occupés', value: stats?.badgesOccupes || 0 },
     { name: 'Libres', value: stats?.badgesLibres || 0 },
   ];
   
-  const COLORS = ['#94a3b8', '#0ea5e9'];
+  const pieColors = ['#0f172a', '#38bdf8']; // Slate 900, Sky 400
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] space-y-6 pb-20 -m-8 p-8 font-sans">
-      
-      {/* Header Froid */}
-      <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm flex items-center justify-between">
-        <div>
-           <h1 className="text-[15px] font-bold text-slate-800 uppercase">Espace <span className="text-blue-600">Agent</span></h1>
-           <p className="text-slate-500 mt-2 text-[13px]">Flux d'accueil et badges.</p>
-        </div>
-        <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg">
-           <Clock className="text-slate-500" size={14} />
-           <span className="text-slate-700 font-bold text-[13px]">{new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
-        </div>
-      </div>
-
-      {/* Action Cards Froid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-1">
-        <ColdActionButton title="Nouvelle Visite" icon={<Plus size={18} />} theme="blue" onClick={() => navigate('/agent/nouvelle-visite')} />
-        <ColdActionButton title="Restituer Badge" icon={<ScanLine size={18} />} theme="teal" onClick={() => navigate('/agent/restitution')} />
-        <ColdActionButton title="Historique" icon={<History size={18} />} theme="slate" onClick={() => navigate('/agent/historique')} />
-      </div>
-
-      {/* Analytics Froid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-1 mt-8">
-        <div className="lg:col-span-2 bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-           <h3 className="text-[13px] font-bold text-slate-700 uppercase mb-8 flex items-center gap-3">
-             <TrendingUp size={16} className="text-blue-500"/> Flux des Visites
-           </h3>
-           <div className="h-64">
-             <ResponsiveContainer width="100%" height="100%">
-               <AreaChart data={chartData}>
-                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                 <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} tick={{fill: '#94a3b8'}} />
-                 <Tooltip />
-                 <Area type="monotone" dataKey="value" stroke="#0ea5e9" strokeWidth={2} fill="#e0f2fe" />
-               </AreaChart>
-             </ResponsiveContainer>
-           </div>
+    <div className="min-h-screen bg-[#f1f5f9] p-8 font-sans">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Header Section */}
+        <div className="lg:col-span-12 flex justify-between items-end mb-4">
+          <div>
+            <h1 className="text-[18px] font-bold text-slate-800 uppercase tracking-wide">Tableau de bord Agent</h1>
+            <p className="text-slate-500 text-[13px]">Flux d'accueil en temps réel</p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => navigate('/agent/nouvelle-visite')} className="px-4 py-2 bg-blue-600 text-white text-[12px] font-bold rounded-lg hover:bg-blue-700 transition">Nouvelle Visite</button>
+          </div>
         </div>
 
-        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-           <h3 className="text-[13px] font-bold text-slate-700 uppercase mb-8 flex items-center gap-3">
-             <BarChart3 size={16} className="text-slate-500"/> Disponibilité
-           </h3>
-           <div className="h-64 flex items-center justify-center">
-             <ResponsiveContainer width="100%" height="100%">
-               <PieChart>
-                 <Pie data={badgesData} dataKey="value" innerRadius={60} outerRadius={80} stroke="none">
-                   {badgesData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                 </Pie>
-                 <Tooltip />
-               </PieChart>
-             </ResponsiveContainer>
-           </div>
+        {/* Chart: Activity (Creative Area Chart) */}
+        <div className="lg:col-span-8 bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+          <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mb-8">Flux visiteurs par heure</h3>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                <Area type="monotone" dataKey="visitors" stroke="#0ea5e9" strokeWidth={3} fill="url(#colorVisits)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
 
-
-      {/* Table Visites Froid */}
-      <div className="px-1 mt-8">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-            <h3 className="text-[13px] font-bold text-slate-700 uppercase">Visites Actives</h3>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
-              <input type="text" placeholder="Filtrer..." className="pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs w-40" />
+        {/* Chart: Badges (Creative Donut Chart) */}
+        <div className="lg:col-span-4 bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+          <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest w-full mb-8">Disponibilité Badges</h3>
+          <div className="h-64 w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={pieData} dataKey="value" innerRadius={70} outerRadius={90} cornerRadius={10} paddingAngle={5} stroke="none">
+                  {pieData.map((_, i) => <Cell key={i} fill={pieColors[i]} />)}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col justify-center items-center">
+              <span className="text-3xl font-black text-slate-800">{stats?.badgesLibres || 0}</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold">Libres</span>
             </div>
           </div>
-          <div className="overflow-x-auto px-6 pb-6">
-            <table className="w-full text-[13px] text-left border-separate border-spacing-y-2">
-              <thead className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                <tr><th className="px-6 py-4">Badge</th><th className="px-6 py-4">Visiteur</th><th className="px-6 py-4">Service</th><th className="px-6 py-4 text-right">Action</th></tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {visites?.map((v: any) => (
-                  <tr key={v.id} className="bg-white hover:bg-slate-50">
-                    <td className="px-6 py-4"><span className="font-mono font-bold bg-slate-100 px-2 py-1 rounded text-xs">{v.badgeCode}</span></td>
-                    <td className="px-6 py-4 font-bold text-slate-700">{v.visiteurNom} {v.visiteurPrenom}</td>
-                    <td className="px-6 py-4 text-slate-500 italic">{v.serviceNom}</td>
-                    <td className="px-6 py-4 text-right"><button className="text-slate-400 hover:text-blue-600"><ArrowUpRight size={16} /></button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        </div>
+
+        {/* Visites Table */}
+        <div className="lg:col-span-12 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <table className="w-full text-left text-[13px]">
+            <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+              <tr>
+                <th className="px-8 py-4">Badge</th>
+                <th className="px-8 py-4">Visiteur</th>
+                <th className="px-8 py-4">Service</th>
+                <th className="px-8 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {visites?.map((v: any) => (
+                <tr key={v.id} className="hover:bg-blue-50/50 transition">
+                  <td className="px-8 py-4 font-mono font-bold text-blue-600">{v.badgeCode}</td>
+                  <td className="px-8 py-4 font-semibold">{v.visiteurNom} {v.visiteurPrenom}</td>
+                  <td className="px-8 py-4 text-slate-500">{v.serviceNom}</td>
+                  <td className="px-8 py-4 text-right"><ArrowUpRight size={16} className="ml-auto text-slate-400 hover:text-blue-600 cursor-pointer" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
