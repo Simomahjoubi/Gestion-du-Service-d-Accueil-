@@ -115,13 +115,13 @@ export const AgentDashboard: React.FC = () => {
               <tbody className="divide-y divide-gray-100">
                 {visites?.slice(0, 4).map((v: any) => (
                   <tr key={v.id} className="hover:bg-blue-50/30 transition">
-                    <td className="px-8 py-4 text-slate-500">{v.heureArrivee || '-'}</td>
-                    <td className="px-8 py-4 font-medium text-slate-700">{v.visiteur.nom} {v.visiteur.prenom}</td>
-                    <td className="px-8 py-4 font-mono font-bold text-blue-700">{v.badge?.code || '-'}</td>
-                    <td className="px-8 py-4 text-slate-500 italic">{v.service.nom}</td>
-                    <td className="px-8 py-4 text-slate-500">{v.motif?.libelleFr || '-'}</td>
-                    <td className="px-8 py-4 text-slate-500">{v.fonctionnaire?.nom || '-'}</td>
-                    <td className="px-8 py-4 font-bold text-blue-800">{v.statutVisite}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.heureArrivee ? v.heureArrivee.substring(11, 16) : '-'}</td>
+                    <td className="px-8 py-4 font-medium text-slate-700">{v.visiteurNom}</td>
+                    <td className="px-8 py-4 font-mono font-bold text-blue-700">{v.badgeCode || '-'}</td>
+                    <td className="px-8 py-4 text-slate-500 italic">{v.serviceNom}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.motifLibelle || '-'}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.fonctionnaireNom || '-'}</td>
+                    <td className="px-8 py-4 font-bold text-blue-800">{v.statut}</td>
                   </tr>
                 ))}
               </tbody>
