@@ -2,13 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
-import { ArrowUpRight, Plus, ScanLine, History, Clock } from 'lucide-react';
+import { Clock, Plus, ScanLine, History } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 /**
- * Interface Agent : 
- * - Header simplifié (Time-focused)
- * - Action Bar : Design Premium Pro (Couleurs froides/professionnelles)
+ * Design Unifié : 
+ * - Header : Heure centrée / professionnelle.
+ * - Table : Colonnes détaillées, limite 4, navigation "Voir tout".
  */
 
 export const AgentDashboard: React.FC = () => {
@@ -23,22 +23,24 @@ export const AgentDashboard: React.FC = () => {
   ];
   
   const mockVisites = [
-    { id: 1, badgeCode: 'B-001', visiteurNom: 'ALAMI', visiteurPrenom: 'Youssef', serviceNom: 'Direction Générale' },
-    { id: 2, badgeCode: 'B-002', visiteurNom: 'BENANI', visiteurPrenom: 'Fatima', serviceNom: 'Service Accueil' },
+    { id: 1, heure: '08:30', visiteur: 'ALAMI Youssef', badge: 'B-001', service: 'Direction Générale', motif: 'Réunion', fonctionnaire: 'M. Ahmed', statut: 'En cours' },
+    { id: 2, heure: '09:15', visiteur: 'BENANI Fatima', badge: 'B-002', service: 'Accueil', motif: 'RDV', fonctionnaire: 'Mme Sara', statut: 'Terminée' },
+    { id: 3, heure: '10:00', visiteur: 'RACHIDI Omar', badge: 'B-003', service: 'RH', motif: 'Entretien', fonctionnaire: 'M. Khalid', statut: 'En cours' },
+    { id: 4, heure: '10:45', visiteur: 'MANSOURI Salma', badge: 'B-004', service: 'Comptabilité', motif: 'Facture', fonctionnaire: 'Mme Nora', statut: 'En cours' },
   ];
 
-  const displayVisites = visites && visites.length > 0 ? visites : mockVisites;
+  const displayVisites = (visites && visites.length > 0 ? visites : mockVisites).slice(0, 4);
+  
   const pieData = [
     { name: 'Occupés', value: stats?.badgesOccupes ?? 15 },
     { name: 'Libres', value: stats?.badgesLibres ?? 35 },
   ];
-  const pieColors = ['#e2e8f0', '#2563eb']; 
+  const pieColors = ['#e2e8f0', '#2563eb'];
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] p-8 font-sans">
       <div className="max-w-[1600px] mx-auto space-y-8">
         
-        {/* Header - Heure Centrée / Alignée */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-200">
           <div className="space-y-1">
             <h1 className="text-[15px] font-bold text-slate-800 uppercase tracking-widest">Tableau de Bord Agent</h1>
@@ -52,14 +54,12 @@ export const AgentDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Bar - Design Premium */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ActionButton title="Nouvelle Visite" icon={<Plus size={18} />} onClick={() => navigate('/agent/nouvelle-visite')} color="blue" />
           <ActionButton title="Restituer Badge" icon={<ScanLine size={18} />} onClick={() => navigate('/agent/restitution')} color="teal" />
           <ActionButton title="Historique" icon={<History size={18} />} onClick={() => navigate('/agent/historique')} color="slate" />
         </div>
 
-        {/* Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
             <h3 className="text-[13px] font-bold text-slate-700 uppercase mb-8">Flux visiteurs par heure</h3>
@@ -74,7 +74,7 @@ export const AgentDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center">
+          <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-center items-center">
             <h3 className="text-[13px] font-bold text-slate-700 uppercase w-full mb-8">Badges Disponibles</h3>
             <div className="h-48 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
@@ -92,22 +92,32 @@ export const AgentDashboard: React.FC = () => {
           </div>
 
           <div className="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50">
+                <h3 className="text-[13px] font-bold text-slate-700 uppercase">Visites Actives</h3>
+                <button onClick={() => navigate('/agent/historique')} className="text-blue-700 text-[11px] font-bold uppercase hover:underline">Voir tout</button>
+            </div>
             <table className="w-full text-left text-[13px]">
               <thead className="bg-gray-50 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
                 <tr>
-                  <th className="px-8 py-4">Badge</th>
+                  <th className="px-8 py-4">Heure</th>
                   <th className="px-8 py-4">Visiteur</th>
+                  <th className="px-8 py-4">Badge</th>
                   <th className="px-8 py-4">Service</th>
-                  <th className="px-8 py-4 text-right">Action</th>
+                  <th className="px-8 py-4">Motif</th>
+                  <th className="px-8 py-4">Fonctionnaire</th>
+                  <th className="px-8 py-4">Statut</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {displayVisites.map((v: any) => (
                   <tr key={v.id} className="hover:bg-blue-50/30 transition">
-                    <td className="px-8 py-4 font-mono font-bold text-blue-700">{v.badgeCode}</td>
-                    <td className="px-8 py-4 font-medium text-slate-700">{v.visiteurNom} {v.visiteurPrenom}</td>
-                    <td className="px-8 py-4 text-slate-500 italic">{v.serviceNom}</td>
-                    <td className="px-8 py-4 text-right"><ArrowUpRight size={16} className="ml-auto text-slate-400 hover:text-blue-700 cursor-pointer" /></td>
+                    <td className="px-8 py-4 text-slate-500">{v.heure}</td>
+                    <td className="px-8 py-4 font-medium text-slate-700">{v.visiteur}</td>
+                    <td className="px-8 py-4 font-mono font-bold text-blue-700">{v.badge}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.service}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.motif}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.fonctionnaire}</td>
+                    <td className="px-8 py-4 font-bold text-blue-800">{v.statut}</td>
                   </tr>
                 ))}
               </tbody>
