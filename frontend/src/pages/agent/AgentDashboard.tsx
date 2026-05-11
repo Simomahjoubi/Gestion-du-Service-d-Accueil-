@@ -2,14 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
-import { ArrowUpRight, Plus, ScanLine, History } from 'lucide-react';
+import { ArrowUpRight, Plus, ScanLine, History, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 /**
- * Design Unifié : 
- * - Font: font-sans (Inter/System), text-[13px] pour les labels.
- * - Palette: "Premium Administrative" (Soft Blues, Crisp Whites, Slate Greys).
- * - Layout: High-end Administrative Dashboard.
+ * Interface Agent : 
+ * - Header simplifié (Time-focused)
+ * - Action Bar : Design Premium Pro (Couleurs froides/professionnelles)
  */
 
 export const AgentDashboard: React.FC = () => {
@@ -23,72 +22,59 @@ export const AgentDashboard: React.FC = () => {
     { time: '16:00', visitors: 58 }, { time: '18:00', visitors: 25 },
   ];
   
-  // Mock data for demonstration if API returns empty
   const mockVisites = [
     { id: 1, badgeCode: 'B-001', visiteurNom: 'ALAMI', visiteurPrenom: 'Youssef', serviceNom: 'Direction Générale' },
     { id: 2, badgeCode: 'B-002', visiteurNom: 'BENANI', visiteurPrenom: 'Fatima', serviceNom: 'Service Accueil' },
-    { id: 3, badgeCode: 'B-003', visiteurNom: 'RACHIDI', visiteurPrenom: 'Omar', serviceNom: 'Ressources Humaines' },
-    { id: 4, badgeCode: 'B-004', visiteurNom: 'MANSOURI', visiteurPrenom: 'Salma', serviceNom: 'Comptabilité' },
   ];
 
   const displayVisites = visites && visites.length > 0 ? visites : mockVisites;
-  
   const pieData = [
     { name: 'Occupés', value: stats?.badgesOccupes ?? 15 },
     { name: 'Libres', value: stats?.badgesLibres ?? 35 },
   ];
-  
-  const pieColors = ['#e2e8f0', '#2563eb']; // Slate 200, Blue 600
+  const pieColors = ['#e2e8f0', '#2563eb']; 
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] p-8 font-sans">
       <div className="max-w-[1600px] mx-auto space-y-8">
         
-        {/* Header - Aligné sur la Navbar */}
-        <div className="flex items-center justify-between">
+        {/* Header - Heure Centrée / Alignée */}
+        <div className="flex items-center justify-between pb-4 border-b border-gray-200">
           <div className="space-y-1">
-            <h1 className="text-[15px] font-bold text-slate-800 uppercase tracking-widest">Tableau de Bord</h1>
+            <h1 className="text-[15px] font-bold text-slate-800 uppercase tracking-widest">Tableau de Bord Agent</h1>
             <p className="text-[13px] text-slate-500">Supervision en temps réel des accès et du flux visiteur.</p>
           </div>
-          <button 
-            onClick={() => navigate('/agent/nouvelle-visite')} 
-            className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-md text-[13px] font-bold hover:bg-blue-800 transition shadow-sm"
-          >
-            <Plus size={16} /> Enregistrer Arrivée
-          </button>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-md shadow-sm">
+            <Clock size={16} className="text-blue-700" />
+            <span className="text-[14px] font-bold text-slate-800 tabular-nums">
+              {new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}
+            </span>
+          </div>
         </div>
 
-        {/* Action Bar - Design Premium Pro */}
+        {/* Action Bar - Design Premium */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ActionButton title="Nouvelle Visite" icon={<Plus size={18} />} onClick={() => navigate('/agent/nouvelle-visite')} />
-          <ActionButton title="Restituer Badge" icon={<ScanLine size={18} />} onClick={() => navigate('/agent/restitution')} />
-          <ActionButton title="Historique" icon={<History size={18} />} onClick={() => navigate('/agent/historique')} />
+          <ActionButton title="Nouvelle Visite" icon={<Plus size={18} />} onClick={() => navigate('/agent/nouvelle-visite')} color="blue" />
+          <ActionButton title="Restituer Badge" icon={<ScanLine size={18} />} onClick={() => navigate('/agent/restitution')} color="teal" />
+          <ActionButton title="Historique" icon={<History size={18} />} onClick={() => navigate('/agent/historique')} color="slate" />
         </div>
 
-        {/* Main Analytics Content */}
+        {/* Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Flux Visiteurs */}
           <div className="lg:col-span-2 bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
             <h3 className="text-[13px] font-bold text-slate-700 uppercase mb-8">Flux visiteurs par heure</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
                   <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} />
                   <Tooltip contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '12px' }} />
-                  <Area type="monotone" dataKey="visitors" stroke="#2563eb" strokeWidth={2} fill="url(#colorVisits)" />
+                  <Area type="monotone" dataKey="visitors" stroke="#2563eb" strokeWidth={2} fill="#dbeafe" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Badge Status */}
-          <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-center items-center">
+          <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm flex flex-col items-center">
             <h3 className="text-[13px] font-bold text-slate-700 uppercase w-full mb-8">Badges Disponibles</h3>
             <div className="h-48 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
@@ -105,7 +91,6 @@ export const AgentDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Visites Table */}
           <div className="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <table className="w-full text-left text-[13px]">
               <thead className="bg-gray-50 text-slate-500 font-bold uppercase text-[10px] tracking-widest">
@@ -134,11 +119,18 @@ export const AgentDashboard: React.FC = () => {
   );
 };
 
-const ActionButton: React.FC<{ title: string, icon: React.ReactNode, onClick: () => void }> = ({ title, icon, onClick }) => (
-  <button 
-    onClick={onClick} 
-    className="flex items-center gap-3 px-6 py-4 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all text-slate-700 font-bold text-[13px]"
-  >
-    {icon} {title}
-  </button>
-);
+const ActionButton: React.FC<{ title: string, icon: React.ReactNode, onClick: () => void, color: 'blue' | 'teal' | 'slate' }> = ({ title, icon, onClick, color }) => {
+  const colors = {
+    blue: 'border-blue-200 bg-blue-50 text-blue-800',
+    teal: 'border-teal-200 bg-teal-50 text-teal-800',
+    slate: 'border-slate-200 bg-slate-100 text-slate-800',
+  };
+  return (
+    <button 
+      onClick={onClick} 
+      className={`flex items-center gap-3 px-6 py-4 border rounded-md transition-all font-bold text-[13px] ${colors[color]}`}
+    >
+      {icon} {title}
+    </button>
+  );
+};
