@@ -40,11 +40,11 @@ export const AgentDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Cards Froid */}
-        <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ColdActionButton title="Nouvelle Visite" icon={<Plus size={18} />} theme="blue" onClick={() => navigate('/agent/nouvelle-visite')} />
-          <ColdActionButton title="Restituer Badge" icon={<ScanLine size={18} />} theme="teal" onClick={() => navigate('/agent/restitution')} />
-          <ColdActionButton title="Historique" icon={<History size={18} />} theme="slate" onClick={() => navigate('/agent/historique')} />
+        {/* Action Bar - Enhanced Visibility */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-1 mb-8">
+          <ColdActionButton title="Nouvelle Visite" icon={<Plus size={24} />} theme="blue" onClick={() => navigate('/agent/nouvelle-visite')} />
+          <ColdActionButton title="Restituer Badge" icon={<ScanLine size={24} />} theme="teal" onClick={() => navigate('/agent/restitution')} />
+          <ColdActionButton title="Historique" icon={<History size={24} />} theme="slate" onClick={() => navigate('/agent/historique')} />
         </div>
 
         {/* Chart: Activity (Creative Area Chart) */}
