@@ -12,7 +12,6 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const [services, setServices] = useState<Service[]>([]);
   const [motifs, setMotifs] = useState<Motif[]>([]);
