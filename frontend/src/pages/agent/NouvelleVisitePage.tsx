@@ -2,35 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
-  User,
-  Users,
-  ArrowRight,
   ChevronLeft,
-  Star,
-  Building2,
-  ClipboardList,
-  AlertCircle,
-  HeartPulse,
-  ShieldCheck,
-  CreditCard,
-  UserPlus,
-  CheckCircle2,
-  Tag,
 } from 'lucide-react';
 
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
 import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
-
-interface VisiteCreatedResult {
-  id: number;
-  visiteurNom: string;
-  fonctionnaireNom: string;
-  serviceNom: string;
-  badgeCode: string;
-  heureArrivee: string;
-}
 
 export const NouvelleVisitePage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,13 +25,7 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const [searchType, setSearchType] = useState('CIN');
   const [searchId, setSearchId] = useState('');
-  const [searchResults, setSearchResults] = useState<Visitor[]>([]);
   const [foundVisitor, setFoundVisitor] = useState<Visitor | null>(null);
-
-  const [isVip, setIsVip] = useState(false);
-  const [notes, setNotes] = useState('');
-
-  const [confirmation, setConfirmation] = useState<VisiteCreatedResult | null>(null);
 
   useEffect(() => {
     serviceService.getAll().then(setServices).catch(() => {});
@@ -72,39 +44,19 @@ export const NouvelleVisitePage: React.FC = () => {
   const handleSearch = async () => {
     setLoading(true);
     setError('');
-    setSearchResults([]);
-    setFoundVisitor(null);
-
     try {
-      let results: Visitor[] = [];
-      if (searchType === 'CIN') {
-        try {
-          const v = await visiteurService.rechercherParCin(searchId);
-          if (v) results = [v];
-        } catch (e: any) {
-          if (e.response?.status !== 404) throw e;
-        }
-      } else if (searchType === 'ADHESION') {
-        try {
-          const v = await visiteurService.rechercherParNumAdhesion(searchId);
-          if (v) results = [v];
-        } catch (e: any) {
-          if (e.response?.status !== 404) throw e;
-        }
-      } else {
-        results = await visiteurService.rechercherParNom(searchId);
-      }
-
-      if (results.length === 0) {
-        setError('Aucun visiteur trouvé.');
-      } else if (results.length === 1) {
-        setFoundVisitor(results[0]);
+      let v: Visitor | null = null;
+      if (searchType === 'CIN') v = await visiteurService.rechercherParCin(searchId);
+      else if (searchType === 'ADHESION') v = await visiteurService.rechercherParNumAdhesion(searchId);
+      
+      if (v) {
+        setFoundVisitor(v);
         setStep(2);
       } else {
-        setSearchResults(results);
+        setError('Visiteur non trouvé.');
       }
     } catch {
-      setError('Erreur lors de la recherche du visiteur.');
+      setError('Erreur recherche.');
     } finally {
       setLoading(false);
     }
@@ -112,77 +64,41 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId) { alert('Veuillez sélectionner un service.'); return; }
-    if (!selectedMotifId)   { alert('Veuillez sélectionner un motif.'); return; }
-    if (!foundVisitor)      return;
-
+    if (!selectedServiceId || !selectedMotifId || !foundVisitor) return;
     setLoading(true);
-    setError('');
     try {
-      const response = await api.post('/visites/enregistrer', {
+      await api.post('/visites/enregistrer', {
         visiteurId:    foundVisitor.id,
         objetVisiteId: Number(selectedMotifId),
-        notes,
-        isVip,
         agentId:       user?.id,
       });
-      const data = response.data;
-      setConfirmation({
-        id:               data.id,
-        visiteurNom:      data.visiteurNom,
-        fonctionnaireNom: data.fonctionnaireNom,
-        serviceNom:       data.serviceNom,
-        badgeCode:        data.badgeCode,
-        heureArrivee:     data.heureArrivee,
-      });
-    } catch (err: any) {
-      const d = err.response?.data;
-      const msg = d?.message || d?.error || (typeof d === 'string' ? d : null) || err.message || 'Erreur lors de la création de la visite.';
-      setError(String(msg));
+      navigate('/agent');
+    } catch {
+      setError('Erreur enregistrement.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getServiceIcon = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes('estivage')) return <Star size={16}/>;
-    if (n.includes('ordre'))    return <ClipboardList size={16}/>;
-    if (n.includes('adhésion')) return <UserPlus size={16}/>;
-    if (n.includes('médical'))  return <HeartPulse size={16}/>;
-    if (n.includes('info'))     return <Search size={16}/>;
-    if (n.includes('assurance')) return <ShieldCheck size={16}/>;
-    if (n.includes('finance'))  return <CreditCard size={16}/>;
-    if (n.includes('tech'))     return <Building2 size={16}/>;
-    return <Users size={16}/>;
-  };
-
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-8">
-        <button
-          onClick={() => step === 1 ? navigate('/agent') : setStep(1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
-        >
-          <ChevronLeft size={20} />
-          <span>{step === 1 ? 'Retour au tableau de bord' : 'Changer de visiteur'}</span>
+        <button onClick={() => step === 1 ? navigate('/agent') : setStep(1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-600">
+          <ChevronLeft size={20} /> Retour
         </button>
       </div>
 
       {step === 1 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
-          <div className="text-center mb-10">
-            <h1 className="text-2xl font-bold text-gray-800">Identifier le visiteur</h1>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-800 text-center mb-10">Identifier le visiteur</h1>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
             <select value={searchType} onChange={e => setSearchType(e.target.value)} className="w-full border-gray-200 rounded-lg py-3">
               <option value="CIN">CIN</option>
               <option value="ADHESION">N° Adhésion</option>
-              <option value="NOM">Nom / Prénom</option>
             </select>
             <input type="text" value={searchId} onChange={e => setSearchId(e.target.value)} className="col-span-2 w-full border-gray-200 rounded-lg py-3" placeholder="Recherche..." />
           </div>
-          <button onClick={handleSearch} className="mt-8 bg-blue-600 text-white w-full py-3 rounded-lg font-bold hover:bg-blue-700">Rechercher</button>
+          <button onClick={handleSearch} className="mt-8 bg-blue-600 text-white w-full py-3 rounded-lg font-bold">Rechercher</button>
         </div>
       ) : (
         <div className="space-y-6">
@@ -200,7 +116,6 @@ export const NouvelleVisitePage: React.FC = () => {
               <InfoRow label="Téléphone" value={foundVisitor?.telephone || 'N/A'} />
               <InfoRow label="Sexe" value={foundVisitor?.sexe || 'N/A'} />
               <InfoRow label="Situation Familiale" value={foundVisitor?.situationFamiliale || 'N/A'} />
-              <InfoRow label="Lien Parenté" value={foundVisitor?.lienParente || 'N/A'} />
             </div>
           </div>
           <form onSubmit={handleRegister} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
