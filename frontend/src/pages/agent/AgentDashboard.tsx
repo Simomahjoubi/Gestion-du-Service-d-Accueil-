@@ -2,7 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
-import { ArrowUpRight } from 'lucide-react';
+import { 
+  Clock, ArrowUpRight, Plus, ScanLine, History
+} from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export const AgentDashboard: React.FC = () => {
@@ -36,6 +38,13 @@ export const AgentDashboard: React.FC = () => {
           <div className="flex gap-2">
             <button onClick={() => navigate('/agent/nouvelle-visite')} className="px-4 py-2 bg-blue-600 text-white text-[12px] font-bold rounded-lg hover:bg-blue-700 transition">Nouvelle Visite</button>
           </div>
+        </div>
+
+        {/* Action Cards Froid */}
+        <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ColdActionButton title="Nouvelle Visite" icon={<Plus size={18} />} theme="blue" onClick={() => navigate('/agent/nouvelle-visite')} />
+          <ColdActionButton title="Restituer Badge" icon={<ScanLine size={18} />} theme="teal" onClick={() => navigate('/agent/restitution')} />
+          <ColdActionButton title="Historique" icon={<History size={18} />} theme="slate" onClick={() => navigate('/agent/historique')} />
         </div>
 
         {/* Chart: Activity (Creative Area Chart) */}
@@ -101,5 +110,20 @@ export const AgentDashboard: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const ColdActionButton: React.FC<{ title: string, icon: React.ReactNode, theme: 'blue' | 'teal' | 'slate', onClick: () => void }> = ({ title, icon, theme, onClick }) => {
+  const styles = {
+    blue:   { bg: 'bg-blue-50', text: 'text-blue-700' },
+    teal:   { bg: 'bg-teal-50', text: 'text-teal-700' },
+    slate:  { bg: 'bg-slate-100', text: 'text-slate-700' },
+  };
+  const s = styles[theme];
+  return (
+    <button onClick={onClick} className={`p-5 rounded-lg border border-slate-200 flex items-center gap-4 text-left ${s.bg}`}>
+      <div className={s.text}>{icon}</div>
+      <span className={`text-[13px] font-bold ${s.text}`}>{title}</span>
+    </button>
   );
 };
