@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
 import { 
-  UserPlus, Key, RefreshCcw, History, TrendingUp, BarChart3, UserCheck, Shield, Clock, Search, ArrowUpRight, Plus, ScanLine
+  RefreshCcw, History, TrendingUp, BarChart3, UserCheck, Shield, Clock, Search, ArrowUpRight, Plus, ScanLine
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -41,8 +41,6 @@ export const AgentDashboard: React.FC = () => {
     { name: 'Occupés', value: stats?.badgesOccupes || 0 },
     { name: 'Libres', value: stats?.badgesLibres || 0 },
   ];
-  
-  const COLORS = ['#fbbf24', '#3b82f6']; 
 
   return (
     <div className="min-h-screen bg-[#fffcf9] space-y-8 pb-20 -m-8 p-8 font-sans">

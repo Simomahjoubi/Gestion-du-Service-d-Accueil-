@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, TrendingUp, Activity, ShieldCheck, Globe, Database, Clock, ArrowUpRight, PlusCircle, Settings, FileBarChart } from 'lucide-react';
+import { Users, TrendingUp, Activity, ShieldCheck, Database, Clock, PlusCircle, Settings, FileBarChart } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { ServiceManagement } from './ServiceManagement';
 import { AdherentManagement } from './AdherentManagement';
