@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
 import { 
-  Clock, Search, ArrowUpRight, History, TrendingUp, BarChart3, Plus, ScanLine
+  Clock, ArrowUpRight, Plus, ScanLine, History
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
