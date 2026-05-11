@@ -142,9 +142,10 @@ const ActionButton: React.FC<{ title: string, icon: React.ReactNode, onClick: ()
   return (
     <button 
       onClick={onClick} 
-      className={`flex items-center gap-3 px-6 py-4 border rounded-md transition-all font-bold text-[13px] ${colors[color]}`}
+      className={`flex flex-col items-center justify-center gap-4 px-8 py-8 border rounded-lg transition-all font-bold text-[13px] ${colors[color]}`}
     >
-      {icon} {title}
+      <div className="scale-150">{icon}</div>
+      <span className="text-[14px] uppercase tracking-widest">{title}</span>
     </button>
   );
 };
