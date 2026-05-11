@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Star, ClipboardList, AlertCircle, ArrowRight, User, Users, Tag, Building2, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
 import api from '../../services/api';
@@ -11,21 +11,13 @@ export const NouvelleVisitePage: React.FC = () => {
   const user = useAuthStore(s => s.user);
 
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
   const [services, setServices] = useState<Service[]>([]);
   const [motifs, setMotifs] = useState<Motif[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [selectedMotifId, setSelectedMotifId] = useState<string>('');
-
   const [searchType, setSearchType] = useState('CIN');
   const [searchId, setSearchId] = useState('');
   const [foundVisitor, setFoundVisitor] = useState<Visitor | null>(null);
-
-  const [isVip, setIsVip] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [confirmation, setConfirmation] = useState<any | null>(null);
 
   useEffect(() => {
     serviceService.getAll().then(setServices).catch(() => {});
@@ -42,27 +34,25 @@ export const NouvelleVisitePage: React.FC = () => {
   }, [selectedServiceId]);
 
   const handleSearch = async () => {
-    setLoading(true); setError('');
     try {
       let v: Visitor | null = null;
       if (searchType === 'CIN') v = await visiteurService.rechercherParCin(searchId);
       else if (searchType === 'ADHESION') v = await visiteurService.rechercherParNumAdhesion(searchId);
-      if (v) { setFoundVisitor(v); setStep(2); } else setError('Visiteur non trouvé.');
-    } catch { setError('Erreur recherche.'); } finally { setLoading(false); }
+      if (v) { setFoundVisitor(v); setStep(2); }
+    } catch {}
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedServiceId || !selectedMotifId || !foundVisitor) return;
-    setLoading(true);
     try {
-      const resp = await api.post('/visites/enregistrer', {
-        visiteurId: foundVisitor.id,
+      await api.post('/visites/enregistrer', {
+        visiteurId:    foundVisitor.id,
         objetVisiteId: Number(selectedMotifId),
-        notes, isVip, agentId: user?.id,
+        agentId:       user?.id,
       });
-      setConfirmation(resp.data);
-    } catch { setError('Erreur enregistrement.'); } finally { setLoading(false); }
+      navigate('/agent');
+    } catch {}
   };
 
   return (
