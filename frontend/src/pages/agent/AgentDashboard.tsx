@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
-import { ArrowUpRight, Plus, ScanLine, History, Clock } from 'lucide-react';
+import { Plus, ScanLine, History, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 /**
