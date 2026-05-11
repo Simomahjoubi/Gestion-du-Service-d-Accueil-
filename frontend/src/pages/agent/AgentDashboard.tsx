@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
 import { 
-  Clock, Search, ArrowUpRight, Plus, ScanLine
+  Clock, Search, ArrowUpRight, Plus, ScanLine, History, TrendingUp, BarChart3, UserCheck
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -33,7 +33,7 @@ export const AgentDashboard: React.FC = () => {
     { name: 'Libres', value: stats?.badgesLibres || 0 },
   ];
   
-  const COLORS = ['#94a3b8', '#0ea5e9']; // Palette Froid (Slate/Sky)
+  const COLORS = ['#94a3b8', '#0ea5e9'];
 
   return (
     <div className="min-h-screen bg-[#f1f5f9] space-y-6 pb-20 -m-8 p-8 font-sans">
@@ -91,6 +91,7 @@ export const AgentDashboard: React.FC = () => {
            </div>
         </div>
       </div>
+
 
       {/* Table Visites Froid */}
       <div className="px-1 mt-8">
