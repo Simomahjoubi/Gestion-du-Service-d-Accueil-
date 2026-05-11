@@ -1,110 +1,114 @@
 import React from 'react';
-import { Users, TrendingUp, Activity, ShieldCheck, Globe, Database, Clock } from 'lucide-react';
+import { Users, TrendingUp, Activity, ShieldCheck, Globe, Database, Clock, ArrowUpRight } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { ServiceManagement } from './ServiceManagement';
 import { AdherentManagement } from './AdherentManagement';
 
 /**
- * Palette de couleurs basée sur le logo :
- * - Bleu Foncé (Primaire) : #1e40af
- * - Jaune/Or (Accent)     : #fbbf24
- * - Bleu Clair            : #3b82f6
+ * Palette de couleurs "Administrative Soft & Creative" :
+ * - Bleu Principal (Léger) : #3b82f6 (Blue 500)
+ * - Bleu Fond             : #eff6ff (Blue 50)
+ * - Or/Jaune (Accent)     : #fbbf24
+ * - Texte                 : #1e293b (Slate 800)
  */
 
 export const AdminDashboard: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50/50 space-y-8 pb-20 -m-8 p-8">
+    <div className="min-h-screen bg-[#f8fafc] space-y-10 pb-20 -m-8 p-8">
       
-      {/* Header Créatif */}
-      <div className="relative overflow-hidden bg-[#1e40af] rounded-3xl p-8 mb-10 shadow-2xl shadow-blue-900/20">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#fbbf24] opacity-10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400 opacity-10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+      {/* Header Soft & Professionnel */}
+      <div className="relative overflow-hidden bg-white rounded-[2.5rem] p-10 border border-blue-100/50 shadow-xl shadow-blue-900/5">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-60"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-50 rounded-full -ml-24 -mb-24 blur-3xl opacity-50"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="text-[#fbbf24]" size={20} />
-              <span className="text-blue-200 text-xs font-bold uppercase tracking-widest">Console d'administration</span>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full mb-4 border border-blue-100">
+              <ShieldCheck className="text-blue-600" size={14} />
+              <span className="text-blue-700 text-[10px] font-bold uppercase tracking-wider">Console d'administration</span>
             </div>
-            <h1 className="text-3xl font-black text-white">Tableau de Bord Système</h1>
-            <p className="text-blue-100/80 mt-2 max-w-md text-sm leading-relaxed">
-              Supervision globale du Service d'Accueil de la Fondation Hassan II. Gérez les accès, les services et suivez les indicateurs clés en temps réel.
+            <h1 className="text-4xl font-black text-slate-800 tracking-tight">Vue d'ensemble <span className="text-blue-600">Système</span></h1>
+            <p className="text-slate-500 mt-4 text-base leading-relaxed">
+              Bienvenue dans votre espace de pilotage. Gérez les ressources et supervisez l'activité de la Fondation avec une interface claire et performante.
             </p>
           </div>
           
-          <div className="flex gap-3">
-             <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex flex-col items-center justify-center min-w-[100px]">
-                <Globe className="text-[#fbbf24] mb-1" size={18} />
-                <span className="text-white font-bold text-lg">Online</span>
-                <span className="text-blue-200 text-[10px] uppercase">Status</span>
+          <div className="flex gap-4">
+             <div className="bg-slate-50 border border-slate-100 p-5 rounded-3xl flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                <Globe className="text-blue-500 mb-2" size={20} />
+                <span className="text-slate-800 font-black text-xl">Stable</span>
+                <span className="text-slate-400 text-[10px] font-bold uppercase mt-1">Status</span>
              </div>
-             <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex flex-col items-center justify-center min-w-[100px]">
-                <Clock className="text-[#fbbf24] mb-1" size={18} />
-                <span className="text-white font-bold text-lg">{new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
-                <span className="text-blue-200 text-[10px] uppercase">Système</span>
+             <div className="bg-slate-50 border border-slate-100 p-5 rounded-3xl flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                <Clock className="text-amber-500 mb-2" size={20} />
+                <span className="text-slate-800 font-black text-xl">{new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
+                <span className="text-slate-400 text-[10px] font-bold uppercase mt-1">Système</span>
              </div>
           </div>
         </div>
       </div>
 
-      <div className="transition-all duration-300 px-2">
-        <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-black text-gray-800 flex items-center gap-3">
-              <Database className="text-[#1e40af]" size={22} />
-              Indicateurs de Performance
-            </h2>
-            <div className="h-1 flex-1 mx-6 bg-gradient-to-r from-gray-200 to-transparent hidden md:block"></div>
+      <div className="px-2">
+        <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
+              <Database className="text-blue-600" size={22} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-800">Indicateurs clés</h2>
+              <p className="text-xs text-slate-400 font-medium">Statistiques globales en temps réel</p>
+            </div>
           </div>
           
-          {/* KPI Metrics - Plus créatifs */}
+          {/* KPI Cards Soft */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <KpiCard 
               title="Adhérents" 
               value="1,284" 
-              subValue="+12 cette semaine"
+              trend="+12.5%"
               icon={<Users size={24}/>} 
-              color="blue"
+              theme="blue"
             />
             <KpiCard 
               title="Visites du Jour" 
               value="86" 
-              subValue="Pic à 10h30"
+              trend="+5.2%"
               icon={<Activity size={24}/>} 
-              color="amber"
+              theme="amber"
             />
             <KpiCard 
-              title="Session Actives" 
+              title="Sessions Actives" 
               value="12" 
-              subValue="Tous services"
+              trend="Stable"
               icon={<TrendingUp size={24}/>} 
-              color="indigo"
+              theme="slate"
             />
           </div>
         </section>
 
-        {/* Sections de gestion avec séparation stylisée */}
-        <div className="grid grid-cols-1 gap-12 mt-16">
-          <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#1e40af]">
-                  <Users size={20} />
-                </div>
-                <h2 className="text-xl font-black text-gray-800">Gestion des Adhérents</h2>
-              </div>
-              <AdherentManagement />
-            </div>
-          </section>
+        {/* Content Containers */}
+        <div className="grid grid-cols-1 gap-12 mt-20">
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/40 relative group overflow-hidden">
+             <div className="absolute top-0 left-0 w-2 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+             <div className="flex items-center justify-between mb-10">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                    <Users size={24} />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-800">Gestion des Adhérents</h2>
+               </div>
+               <button className="text-blue-600 font-bold text-sm hover:underline">Voir tout</button>
+             </div>
+             <AdherentManagement />
+          </div>
           
-          <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/50">
-            <UserManagement />
-          </section>
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/40">
+             <UserManagement />
+          </div>
           
-          <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/50">
-            <ServiceManagement />
-          </section>
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/40">
+             <ServiceManagement />
+          </div>
         </div>
       </div>
 
@@ -115,38 +119,38 @@ export const AdminDashboard: React.FC = () => {
 const KpiCard: React.FC<{ 
   title: string, 
   value: string, 
-  subValue?: string,
+  trend?: string,
   icon: React.ReactNode, 
-  color: 'blue' | 'amber' | 'indigo' 
-}> = ({ title, value, subValue, icon, color }) => {
-  const themes = {
-    blue:   { bg: 'bg-blue-50',   iconBg: 'bg-[#1e40af]', iconColor: 'text-white',     shadow: 'shadow-blue-100', accent: 'bg-[#1e40af]' },
-    amber:  { bg: 'bg-amber-50',  iconBg: 'bg-[#fbbf24]', iconColor: 'text-gray-900', shadow: 'shadow-amber-100', accent: 'bg-[#fbbf24]' },
-    indigo: { bg: 'bg-indigo-50', iconBg: 'bg-indigo-600', iconColor: 'text-white',     shadow: 'shadow-indigo-100', accent: 'bg-indigo-600' },
+  theme: 'blue' | 'amber' | 'slate' 
+}> = ({ title, value, trend, icon, theme }) => {
+  const styles = {
+    blue:   { bg: 'bg-blue-50/50',   iconColor: 'text-blue-600',   accent: 'bg-blue-600' },
+    amber:  { bg: 'bg-amber-50/50',  iconColor: 'text-amber-600',  accent: 'bg-amber-600' },
+    slate:  { bg: 'bg-slate-50/50',  iconColor: 'text-slate-600',  accent: 'bg-slate-600' },
   };
   
-  const theme = themes[color];
+  const s = styles[theme];
 
   return (
-    <div className={`group bg-white p-1 rounded-[2rem] border border-gray-100 ${theme.shadow} shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-xl`}>
-      <div className="bg-white p-6 rounded-[1.8rem] flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`${theme.iconBg} ${theme.iconColor} w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform duration-500`}>
-            {icon}
-          </div>
-          <div className="text-right">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{title}</span>
-            <div className={`h-1 w-8 ml-auto mt-1 ${theme.accent} rounded-full`}></div>
-          </div>
+    <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/30 transition-all duration-300 hover:shadow-2xl hover:border-blue-200 group">
+      <div className="flex justify-between items-start mb-6">
+        <div className={`w-14 h-14 rounded-2xl ${s.bg} ${s.iconColor} flex items-center justify-center transition-transform group-hover:scale-110 duration-500`}>
+          {icon}
         </div>
-        
-        <div className="mt-2">
-          <h3 className="text-4xl font-black text-gray-900 tracking-tight">{value}</h3>
-          {subValue && (
-            <p className="text-xs text-gray-400 mt-1 font-medium italic">{subValue}</p>
-          )}
-        </div>
+        {trend && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">
+            <ArrowUpRight size={10} />
+            {trend}
+          </div>
+        )}
       </div>
+      
+      <div>
+        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
+        <h3 className="text-4xl font-black text-slate-800 tracking-tight">{value}</h3>
+      </div>
+      
+      <div className={`h-1 w-12 mt-6 ${s.accent} rounded-full opacity-30 group-hover:opacity-100 transition-opacity w-0 group-hover:w-16 duration-500`}></div>
     </div>
   );
 };
