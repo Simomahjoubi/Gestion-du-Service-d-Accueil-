@@ -267,141 +267,63 @@ export const NouvelleVisitePage: React.FC = () => {
           </div>
         </div>
       ) : (
-        /* ── ÉTAPE 2 : FORMULAIRE ── */
-        <form onSubmit={handleRegister} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Info Visiteur */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-slate-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4">
-                  {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
-                </div>
-                <h2 className="text-xl font-bold text-gray-800">{foundVisitor?.nom} {foundVisitor?.prenom}</h2>
-                <div className="flex flex-wrap justify-center gap-2 mt-2">
-                  <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                    {foundVisitor?.type}
-                  </span>
-                  {foundVisitor?.statutAdherent && (
-                    <span className={`${foundVisitor.statutAdherent === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest`}>
-                      {foundVisitor.statutAdherent}
-                    </span>
-                  )}
-                </div>
-              </div>
+        {/* ── ÉTAPE 2 : FORMULAIRE REDESIGN ── */}
+        <div className="space-y-6">
+          
+          {/* Row 1: Informations d'Adhésion (4 cartes) */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <InfoCard title="Type Adhérent" value={foundVisitor?.typeAdherentDetail || 'N/A'} />
+            <InfoCard title="Grade / Echelle" value={foundVisitor?.grade || 'N/A'} />
+            <InfoCard title="Affectation" value={foundVisitor?.affectation || 'N/A'} />
+            <InfoCard title="Assurance" value={foundVisitor?.typeAssurance || 'N/A'} />
+          </div>
 
-              <div className="mt-8 space-y-4 border-t border-gray-50 pt-6">
-                {foundVisitor?.type === 'ADHERENT' && (
-                  <>
-                    <InfoRow label="CIN" value={foundVisitor.cin || 'N/A'} />
-                    <InfoRow label="N° Adhérent" value={foundVisitor.numAdhesion || 'N/A'} color="text-blue-600" />
-                    <div className="pt-2 mt-2 border-t border-dashed border-gray-100 space-y-3">
-                      <InfoRow label="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'N/A'} />
-                      <InfoRow label="Grade" value={foundVisitor.grade || 'N/A'} />
-                      <InfoRow label="Affectation" value={foundVisitor.affectation || 'N/A'} color="text-slate-900" />
-                      <InfoRow label="Assurance" value={foundVisitor.typeAssurance || 'N/A'}
-                        color={foundVisitor.typeAssurance?.toLowerCase().includes('non') ? 'text-red-600' : 'text-green-600'}
-                      />
-                    </div>
-                  </>
-                )}
-                {foundVisitor?.type === 'CONJOINT' && (
-                  <>
-                    <InfoRow label="CIN Conjoint" value={foundVisitor.cin || 'N/A'} />
-                    <InfoRow label="Lien" value={foundVisitor.lienParente || 'ÉPOUSE'} color="text-purple-600" />
-                  </>
-                )}
-                {foundVisitor?.type === 'ENFANT' && (
-                  <>
-                    <InfoRow label="CIN Enfant" value={foundVisitor.cin || 'N/A'} />
-                    <InfoRow label="Lien" value={foundVisitor.lienParente || 'ENFANT'} color="text-purple-600" />
-                  </>
-                )}
-              </div>
+          {/* Row 2: Photo et infos personnelles */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex gap-8">
+            <div className="w-32 h-32 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500 font-bold">PHOTO</div>
+            <div className="grid grid-cols-2 gap-x-12 gap-y-4 flex-1">
+              <InfoRow label="Nom / Prénom" value={`${foundVisitor?.nom} ${foundVisitor?.prenom}`} />
+              <InfoRow label="CIN" value={foundVisitor?.cin || 'N/A'} />
+              <InfoRow label="Téléphone" value={foundVisitor?.telephone || 'N/A'} />
+              <InfoRow label="Sexe" value={foundVisitor?.sexe || 'N/A'} />
+              <InfoRow label="Situation Familiale" value={foundVisitor?.situationFamiliale || 'N/A'} />
+              <InfoRow label="Lien Parenté" value={foundVisitor?.lienParente || 'N/A'} />
             </div>
           </div>
 
-          {/* Formulaire Visite */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <ClipboardList className="text-blue-600" size={20} />
-                Détails de la visite
-              </h3>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Service cible</label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {services.map(s => (
-                      <ServiceToggle
-                        key={s.id}
-                        label={s.nom}
-                        icon={getServiceIcon(s.nom)}
-                        selected={selectedServiceId === s.id}
-                        onClick={() => setSelectedServiceId(s.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Motif de la visite</label>
-                  <select
-                    value={selectedMotifId}
-                    onChange={e => setSelectedMotifId(e.target.value)}
-                    required
-                    className="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3"
-                  >
-                    <option value="">Sélectionnez un motif...</option>
-                    {motifs.map(m => (
-                      <option key={m.id} value={m.id}>{m.libelleFr}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-yellow-800">Priorité VIP</p>
-                    <p className="text-xs text-yellow-700">Affecter au responsable du service</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={isVip}
-                    onChange={e => setIsVip(e.target.checked)}
-                    className="w-6 h-6 rounded text-yellow-600 focus:ring-yellow-500 border-yellow-300"
-                  />
-                  <Star size={20} className={isVip ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-300'} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Notes (Optionnel)</label>
-                  <textarea
-                    rows={3}
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 p-3"
-                    placeholder="Informations complémentaires..."
-                  />
-                </div>
+          {/* Row 3: Enregistrement Visite */}
+          <form onSubmit={handleRegister} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h3 className="text-lg font-bold text-gray-800 mb-6">Enregistrement de la visite</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Service</label>
+                <select value={selectedServiceId || ''} onChange={e => setSelectedServiceId(Number(e.target.value))} className="w-full border-gray-200 rounded-lg py-3">
+                  <option value="">Choisir un service...</option>
+                  {services.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Motif</label>
+                <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} className="w-full border-gray-200 rounded-lg py-3">
+                  <option value="">Choisir un motif...</option>
+                  {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr}</option>)}
+                </select>
               </div>
             </div>
+            <button type="submit" className="mt-8 w-full bg-blue-700 text-white py-4 rounded-lg font-bold hover:bg-blue-800 transition">Valider et Affecter Badge</button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+};
 
-            {error && (
-              <div className="flex items-center gap-2 text-red-600 text-sm font-medium bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                <AlertCircle size={16} /> {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-60"
-            >
-              {loading ? 'Enregistrement...' : 'Valider l\'arrivée et assigner un badge'}
-              {!loading && <ArrowRight size={20} />}
-            </button>
-          </div>
-        </form>
+const InfoCard: React.FC<{ title: string, value: string }> = ({ title, value }) => (
+  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{title}</p>
+    <p className="text-sm font-bold text-gray-800 mt-1">{value}</p>
+  </div>
+);
       )}
 
       {/* ── Modal de confirmation ── */}
