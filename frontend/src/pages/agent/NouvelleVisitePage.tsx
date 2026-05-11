@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Star, ClipboardList, AlertCircle, ArrowRight, User, Users, Tag, Building2, CheckCircle2 } from 'lucide-react';
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
 import api from '../../services/api';
@@ -11,13 +11,21 @@ export const NouvelleVisitePage: React.FC = () => {
   const user = useAuthStore(s => s.user);
 
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const [services, setServices] = useState<Service[]>([]);
   const [motifs, setMotifs] = useState<Motif[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [selectedMotifId, setSelectedMotifId] = useState<string>('');
+
   const [searchType, setSearchType] = useState('CIN');
   const [searchId, setSearchId] = useState('');
   const [foundVisitor, setFoundVisitor] = useState<Visitor | null>(null);
+
+  const [isVip, setIsVip] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [confirmation, setConfirmation] = useState<any | null>(null);
 
   useEffect(() => {
     serviceService.getAll().then(setServices).catch(() => {});
@@ -34,35 +42,31 @@ export const NouvelleVisitePage: React.FC = () => {
   }, [selectedServiceId]);
 
   const handleSearch = async () => {
+    setLoading(true); setError('');
     try {
       let v: Visitor | null = null;
       if (searchType === 'CIN') v = await visiteurService.rechercherParCin(searchId);
       else if (searchType === 'ADHESION') v = await visiteurService.rechercherParNumAdhesion(searchId);
-      if (v) { setFoundVisitor(v); setStep(2); }
-    } catch {}
+      if (v) { setFoundVisitor(v); setStep(2); } else setError('Visiteur non trouvé.');
+    } catch { setError('Erreur recherche.'); } finally { setLoading(false); }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedServiceId || !selectedMotifId || !foundVisitor) return;
+    setLoading(true);
     try {
-      await api.post('/visites/enregistrer', {
-        visiteurId:    foundVisitor.id,
+      const resp = await api.post('/visites/enregistrer', {
+        visiteurId: foundVisitor.id,
         objetVisiteId: Number(selectedMotifId),
-        agentId:       user?.id,
+        notes, isVip, agentId: user?.id,
       });
-      navigate('/agent');
-    } catch {}
+      setConfirmation(resp.data);
+    } catch { setError('Erreur enregistrement.'); } finally { setLoading(false); }
   };
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-8">
-        <button onClick={() => step === 1 ? navigate('/agent') : setStep(1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-600">
-          <ChevronLeft size={20} /> Retour
-        </button>
-      </div>
-
       {step === 1 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
           <h1 className="text-2xl font-bold text-gray-800 text-center mb-10">Identifier le visiteur</h1>
@@ -94,18 +98,28 @@ export const NouvelleVisitePage: React.FC = () => {
             </div>
           </div>
           <form onSubmit={handleRegister} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Enregistrement de la visite</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <select value={selectedServiceId || ''} onChange={e => setSelectedServiceId(Number(e.target.value))} className="w-full border-gray-200 rounded-lg py-3">
-                <option value="">Service...</option>
-                {services.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
-              </select>
-              <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} className="w-full border-gray-200 rounded-lg py-3">
-                <option value="">Motif...</option>
-                {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr}</option>)}
-              </select>
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2"><ClipboardList size={20} /> Détails de la visite</h3>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <select value={selectedServiceId || ''} onChange={e => setSelectedServiceId(Number(e.target.value))} className="w-full border-gray-200 rounded-lg py-3">
+                  <option value="">Service...</option>
+                  {services.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                </select>
+                <select value={selectedMotifId} onChange={e => setSelectedMotifId(e.target.value)} className="w-full border-gray-200 rounded-lg py-3">
+                  <option value="">Motif...</option>
+                  {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <input type="checkbox" checked={isVip} onChange={e => setIsVip(e.target.checked)} className="w-5 h-5" />
+                <label className="text-sm font-bold text-yellow-800">Priorité VIP</label>
+                <Star size={18} className={isVip ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-300'} />
+              </div>
+              <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} className="w-full border-gray-200 rounded-lg p-3" placeholder="Notes..." />
             </div>
-            <button type="submit" className="mt-8 w-full bg-blue-700 text-white py-4 rounded-lg font-bold">Valider</button>
+            <button type="submit" disabled={loading} className="mt-8 w-full bg-slate-800 text-white py-4 rounded-xl font-bold hover:bg-slate-900 transition flex items-center justify-center gap-3">
+              {loading ? '...' : 'Valider l\'arrivée et assigner un badge'} {!loading && <ArrowRight size={20} />}
+            </button>
           </form>
         </div>
       )}
