@@ -2,13 +2,14 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { visiteService } from '../../services/visiteService';
-import { Clock, Plus, ScanLine, History } from 'lucide-react';
+import { ArrowUpRight, Plus, ScanLine, History, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 /**
  * Design Unifié : 
- * - Header : Heure centrée / professionnelle.
- * - Table : Colonnes détaillées, limite 4, navigation "Voir tout".
+ * - Font: font-sans (Inter/System), text-[13px] pour les labels.
+ * - Palette: "Premium Administrative" (Soft Blues, Crisp Whites, Slate Greys).
+ * - Layout: High-end Administrative Dashboard.
  */
 
 export const AgentDashboard: React.FC = () => {
@@ -22,25 +23,17 @@ export const AgentDashboard: React.FC = () => {
     { time: '16:00', visitors: 58 }, { time: '18:00', visitors: 25 },
   ];
   
-  const mockVisites = [
-    { id: 1, heure: '08:30', visiteur: 'ALAMI Youssef', badge: 'B-001', service: 'Direction Générale', motif: 'Réunion', fonctionnaire: 'M. Ahmed', statut: 'En cours' },
-    { id: 2, heure: '09:15', visiteur: 'BENANI Fatima', badge: 'B-002', service: 'Accueil', motif: 'RDV', fonctionnaire: 'Mme Sara', statut: 'Terminée' },
-    { id: 3, heure: '10:00', visiteur: 'RACHIDI Omar', badge: 'B-003', service: 'RH', motif: 'Entretien', fonctionnaire: 'M. Khalid', statut: 'En cours' },
-    { id: 4, heure: '10:45', visiteur: 'MANSOURI Salma', badge: 'B-004', service: 'Comptabilité', motif: 'Facture', fonctionnaire: 'Mme Nora', statut: 'En cours' },
-  ];
-
-  const displayVisites = (visites && visites.length > 0 ? visites : mockVisites).slice(0, 4);
-  
   const pieData = [
-    { name: 'Occupés', value: stats?.badgesOccupes ?? 15 },
-    { name: 'Libres', value: stats?.badgesLibres ?? 35 },
+    { name: 'Occupés', value: stats?.badgesOccupes ?? 0 },
+    { name: 'Libres', value: stats?.badgesLibres ?? 0 },
   ];
-  const pieColors = ['#e2e8f0', '#2563eb'];
+  const pieColors = ['#e2e8f0', '#2563eb']; // Slate 200, Blue 600
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] p-8 font-sans">
       <div className="max-w-[1600px] mx-auto space-y-8">
         
+        {/* Header - Aligné sur la Navbar */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-200">
           <div className="space-y-1">
             <h1 className="text-[15px] font-bold text-slate-800 uppercase tracking-widest">Tableau de Bord Agent</h1>
@@ -54,26 +47,36 @@ export const AgentDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Action Bar - Design Premium Pro */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ActionButton title="Nouvelle Visite" icon={<Plus size={18} />} onClick={() => navigate('/agent/nouvelle-visite')} color="blue" />
           <ActionButton title="Restituer Badge" icon={<ScanLine size={18} />} onClick={() => navigate('/agent/restitution')} color="teal" />
           <ActionButton title="Historique" icon={<History size={18} />} onClick={() => navigate('/agent/historique')} color="slate" />
         </div>
 
+        {/* Main Analytics Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Flux Visiteurs */}
           <div className="lg:col-span-2 bg-white p-8 rounded-lg border border-gray-200 shadow-sm">
             <h3 className="text-[13px] font-bold text-slate-700 uppercase mb-8">Flux visiteurs par heure</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} />
                   <Tooltip contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '12px' }} />
-                  <Area type="monotone" dataKey="visitors" stroke="#2563eb" strokeWidth={2} fill="#dbeafe" />
+                  <Area type="monotone" dataKey="visitors" stroke="#2563eb" strokeWidth={2} fill="url(#colorVisits)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
+          {/* Badge Status */}
           <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-center items-center">
             <h3 className="text-[13px] font-bold text-slate-700 uppercase w-full mb-8">Badges Disponibles</h3>
             <div className="h-48 w-full relative">
@@ -85,12 +88,13 @@ export const AgentDashboard: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col justify-center items-center">
-                <span className="text-2xl font-bold text-slate-800">{stats?.badgesLibres ?? 35}</span>
+                <span className="text-2xl font-bold text-slate-800">{stats?.badgesLibres ?? 0}</span>
                 <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Libres</span>
               </div>
             </div>
           </div>
 
+          {/* Visites Table */}
           <div className="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50">
                 <h3 className="text-[13px] font-bold text-slate-700 uppercase">Visites Actives</h3>
@@ -109,15 +113,15 @@ export const AgentDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {displayVisites.map((v: any) => (
+                {visites?.slice(0, 4).map((v: any) => (
                   <tr key={v.id} className="hover:bg-blue-50/30 transition">
-                    <td className="px-8 py-4 text-slate-500">{v.heure}</td>
-                    <td className="px-8 py-4 font-medium text-slate-700">{v.visiteur}</td>
-                    <td className="px-8 py-4 font-mono font-bold text-blue-700">{v.badge}</td>
-                    <td className="px-8 py-4 text-slate-500">{v.service}</td>
-                    <td className="px-8 py-4 text-slate-500">{v.motif}</td>
-                    <td className="px-8 py-4 text-slate-500">{v.fonctionnaire}</td>
-                    <td className="px-8 py-4 font-bold text-blue-800">{v.statut}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.heureArrivee || '-'}</td>
+                    <td className="px-8 py-4 font-medium text-slate-700">{v.visiteur.nom} {v.visiteur.prenom}</td>
+                    <td className="px-8 py-4 font-mono font-bold text-blue-700">{v.badge?.code || '-'}</td>
+                    <td className="px-8 py-4 text-slate-500 italic">{v.service.nom}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.motif?.libelleFr || '-'}</td>
+                    <td className="px-8 py-4 text-slate-500">{v.fonctionnaire?.nom || '-'}</td>
+                    <td className="px-8 py-4 font-bold text-blue-800">{v.statutVisite}</td>
                   </tr>
                 ))}
               </tbody>
