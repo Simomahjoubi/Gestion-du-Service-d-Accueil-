@@ -12,7 +12,7 @@ import {
   Bell,
 } from 'lucide-react';
 
-import logo from '../assets/logo.jpg';
+import logo from '../assets/logo.png';
 
 export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuthStore();
@@ -33,7 +33,7 @@ export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/agent')}>
              <Menu className="text-gray-500 mr-2" size={20} />
-             <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
+             <img src={logo} alt="Logo" className="h-16 w-auto object-contain pt-1" />
           </div>
 
           <nav className="hidden lg:flex items-center gap-1">

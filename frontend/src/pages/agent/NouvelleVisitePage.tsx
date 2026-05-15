@@ -70,7 +70,7 @@ export const NouvelleVisitePage: React.FC = () => {
       });
       navigate('/agent');
     } catch (err: any) { 
-      setError(err?.response?.data?.error || 'Erreur lors de l''enregistrement de la visite.'); 
+      setError(err?.response?.data?.error || "Erreur lors de l'enregistrement de la visite."); 
     } finally { setLoading(false); }
   };
 

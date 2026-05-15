@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { User, Lock, LogIn, AlertCircle, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 
-import logo from '../../assets/logo.jpg';
+import logo from '../../assets/logo.png';
 
 const ROLE_ROUTES: Record<string, string> = {
   ADMIN:        '/admin',
@@ -129,10 +129,7 @@ export const LoginPage: React.FC = () => {
         {/* Right: Info */}
         <div className="w-full md:w-1/2 p-10 flex flex-col items-center justify-center bg-white">
           <div className="mb-8 flex flex-col items-center">
-            <img src={logo} alt="Fondation Hassan II" className="w-48 h-auto object-contain mb-4" />
-            <div className="mt-2 text-[10px] text-gray-400 text-center max-w-[250px] uppercase font-bold tracking-widest">
-              Gestion du Service d'Accueil
-            </div>
+            <img src={logo} alt="Fondation Hassan II" className="w-full h-auto object-contain mb-4" />
           </div>
 
           <h2 className="text-[#0f172a] font-bold text-center text-lg max-w-xs leading-tight mt-4">

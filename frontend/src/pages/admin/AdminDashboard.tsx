@@ -12,7 +12,7 @@ import { AdherentManagement } from './AdherentManagement';
 
 export const AdminDashboard: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#f1f5f9] space-y-8 pb-20 -m-8 p-8 font-sans">
+    <div className="space-y-8 pb-20 font-sans">
       
       {/* Header Froid & Pro */}
       <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">

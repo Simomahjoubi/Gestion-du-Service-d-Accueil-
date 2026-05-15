@@ -231,7 +231,7 @@ export const RestitutionBadgePage: React.FC = () => {
   const prets   = badges.filter(b => b.statut === 'PRET_A_RESTITUER').length;
 
   return (
-    <div className="p-6 min-h-screen bg-[#f8f9fa]">
+    <div className="space-y-6">
 
       {/* ── Toast ── */}
       {toast && (

@@ -25,12 +25,9 @@ export const AgentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { data: stats } = useQuery({ queryKey: ['dashboard-stats'], queryFn: () => visiteService.getStatsToday(), refetchInterval: 30000 });
   const { data: visites } = useQuery({ queryKey: ['visites-today'], queryFn: () => visiteService.getVisitesToday(), refetchInterval: 30000 });
+  const { data: hourlyData } = useQuery({ queryKey: ['hourly-stats'], queryFn: () => visiteService.getHourlyStats(), refetchInterval: 60000 });
 
-  const chartData = [
-    { time: '08:00', visitors: 12 }, { time: '10:00', visitors: 28 },
-    { time: '12:00', visitors: 45 }, { time: '14:00', visitors: 32 },
-    { time: '16:00', visitors: 58 }, { time: '18:00', visitors: 25 },
-  ];
+  const chartData = hourlyData?.map((count: number, i: number) => ({ time: `${i}:00`, visitors: count })) ?? [];
   
   const pieData = [
     { name: 'Occupés', value: stats?.badgesOccupes ?? 0 },
@@ -39,10 +36,9 @@ export const AgentDashboard: React.FC = () => {
   const pieColors = ['#f1f5f9', '#2563eb']; // Slate 100, Blue 600
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] p-8 font-sans">
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        
-        {/* Header Section */}
+    <div className="space-y-8 font-sans">
+      
+      {/* Header Section */}
         <div className="flex items-center justify-between pb-6 border-b border-gray-200">
           <div>
             <h1 className="text-[15px] font-bold text-slate-800 uppercase tracking-widest">Tableau de Bord Agent</h1>
@@ -206,7 +202,6 @@ export const AgentDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };

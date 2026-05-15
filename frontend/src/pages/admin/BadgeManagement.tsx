@@ -415,7 +415,7 @@ export const BadgeManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-[#f8f9fa]">
+    <div className="space-y-6">
       {/* ── Page header ── */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">

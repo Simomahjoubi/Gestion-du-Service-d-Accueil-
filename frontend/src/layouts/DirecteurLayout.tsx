@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { LogOut, LayoutDashboard, User, Bell, Crown } from 'lucide-react';
 
-import logo from '../assets/logo.jpg';
+import logo from '../assets/logo.png';
 
 export const DirecteurLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -21,7 +21,7 @@ export const DirecteurLayout: React.FC = () => {
       <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-50">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/directeur')}>
-            <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
+            <img src={logo} alt="Logo" className="h-16 w-auto object-contain pt-1" />
           </div>
           <div className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-full px-3 py-1">
             <Crown size={12} className="text-amber-600" />
@@ -71,7 +71,7 @@ export const DirecteurLayout: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-8 w-full">
         <Outlet />
       </main>
     </div>

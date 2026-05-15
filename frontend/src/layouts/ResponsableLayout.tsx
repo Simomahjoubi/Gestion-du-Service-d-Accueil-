@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { LogOut, LayoutDashboard, Users, FileText, Bell, User, Star } from 'lucide-react';
 
-import logo from '../assets/logo.jpg';
+import logo from '../assets/logo.png';
 
 export const ResponsableLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuthStore();
@@ -25,7 +25,7 @@ export const ResponsableLayout: React.FC<{ children: React.ReactNode }> = ({ chi
         {/* Left */}
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/responsable')}>
-            <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
+            <img src={logo} alt="Logo" className="h-16 w-auto object-contain pt-1" />
           </div>
           <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
             <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -76,7 +76,7 @@ export const ResponsableLayout: React.FC<{ children: React.ReactNode }> = ({ chi
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-8 w-full">
         {children}
       </main>
     </div>

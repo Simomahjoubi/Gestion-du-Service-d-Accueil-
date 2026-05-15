@@ -57,6 +57,24 @@ public class VisiteController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/stats/hourly")
+    public ResponseEntity<List<Long>> getVisitesHourlyToday() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime debutJour = LocalDate.now().atStartOfDay();
+        List<Long> hourlyCounts = new java.util.ArrayList<>();
+        
+        for (int i = 0; i < 24; i++) {
+            LocalDateTime debutHeure = debutJour.plusHours(i);
+            LocalDateTime finHeure = debutJour.plusHours(i + 1);
+            if (debutHeure.isAfter(now)) {
+                hourlyCounts.add(0L);
+            } else {
+                hourlyCounts.add(visiteRepo.findByHeureArriveeBetween(debutHeure, finHeure).size() * 1L);
+            }
+        }
+        return ResponseEntity.ok(hourlyCounts);
+    }
+
     @GetMapping("/stats/today")
     public ResponseEntity<DashboardStatsResponse> getStatsToday() {
         LocalDateTime debutJour = LocalDate.now().atStartOfDay();
