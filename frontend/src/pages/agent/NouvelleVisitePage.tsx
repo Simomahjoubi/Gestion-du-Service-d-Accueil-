@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Star, ClipboardList, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Star, ClipboardList, ArrowRight, AlertCircle } from 'lucide-react';
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
 import api from '../../services/api';
@@ -12,6 +12,7 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const [services, setServices] = useState<Service[]>([]);
   const [motifs, setMotifs] = useState<Motif[]>([]);
@@ -45,22 +46,32 @@ export const NouvelleVisitePage: React.FC = () => {
       let v: Visitor | null = null;
       if (searchType === 'CIN') v = await visiteurService.rechercherParCin(searchId);
       else if (searchType === 'ADHESION') v = await visiteurService.rechercherParNumAdhesion(searchId);
-      if (v) { setFoundVisitor(v); setStep(2); } else setError('Visiteur non trouvé.');
-    } catch { setError('Erreur recherche.'); } finally { setLoading(false); }
+      if (v) { setFoundVisitor(v); setStep(2); } 
+      else setError('Visiteur non trouvé.');
+    } catch (err: any) { 
+      setError(err?.response?.data?.error || 'Erreur lors de la recherche du visiteur.'); 
+    } finally { setLoading(false); }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId || !selectedMotifId || !foundVisitor) return;
+    if (!selectedServiceId || !selectedMotifId || !foundVisitor) {
+      setError('Veuillez sélectionner un service et un motif.');
+      return;
+    }
     setLoading(true);
     try {
       await api.post('/visites/enregistrer', {
         visiteurId: foundVisitor.id,
         objetVisiteId: Number(selectedMotifId),
-        notes, isVip, agentId: user?.id,
+        notes, 
+        isVip, 
+        agentId: user?.id,
       });
       navigate('/agent');
-    } catch { setError('Erreur enregistrement.'); } finally { setLoading(false); }
+    } catch (err: any) { 
+      setError(err?.response?.data?.error || 'Erreur lors de l''enregistrement de la visite.'); 
+    } finally { setLoading(false); }
   };
 
   return (
@@ -70,6 +81,12 @@ export const NouvelleVisitePage: React.FC = () => {
           <ChevronLeft size={20} /> Retour
         </button>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium flex items-center gap-2">
+          <AlertCircle size={16} /> {error}
+        </div>
+      )}
 
       {step === 1 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">

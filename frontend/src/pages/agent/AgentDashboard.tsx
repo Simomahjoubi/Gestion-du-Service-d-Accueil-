@@ -67,8 +67,8 @@ export const AgentDashboard: React.FC = () => {
             color="blue"
           />
           <ActionCard 
-            title="Restituer Badge" 
-            label="Libération d'accès"
+            title="Gérer les badges" 
+            label="Suivi et clôture des accès"
             icon={<RotateCcw size={20} />} 
             onClick={() => navigate('/agent/restitution')} 
             color="slate"
@@ -159,19 +159,20 @@ export const AgentDashboard: React.FC = () => {
               <table className="w-full text-left text-[13px]">
                 <thead className="bg-gray-50/50 text-slate-500 font-bold uppercase text-[10px] tracking-[0.1em]">
                   <tr>
-                    <th className="px-8 py-4 border-b border-gray-100">Heure</th>
                     <th className="px-8 py-4 border-b border-gray-100">Visiteur</th>
                     <th className="px-8 py-4 border-b border-gray-100">Badge</th>
                     <th className="px-8 py-4 border-b border-gray-100">Service</th>
-                    <th className="px-8 py-4 border-b border-gray-100">Motif</th>
                     <th className="px-8 py-4 border-b border-gray-100">Fonctionnaire</th>
+                    <th className="px-8 py-4 border-b border-gray-100 text-center">Badge Pris</th>
+                    <th className="px-8 py-4 border-b border-gray-100 text-center">Acceptée</th>
+                    <th className="px-8 py-4 border-b border-gray-100 text-center">Fin Visite</th>
+                    <th className="px-8 py-4 border-b border-gray-100 text-center">Badge Rendu</th>
                     <th className="px-8 py-4 border-b border-gray-100 text-right">Statut</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {visites?.slice(0, 5).map((v: any) => (
                     <tr key={v.id} className="hover:bg-blue-50/20 transition-colors group">
-                      <td className="px-8 py-4 text-slate-500 tabular-nums">{v.heureArrivee ? v.heureArrivee.substring(11, 16) : '-'}</td>
                       <td className="px-8 py-4 font-bold text-slate-700">{v.visiteurNom}</td>
                       <td className="px-8 py-4">
                         <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200 font-mono font-bold text-[11px]">
@@ -179,8 +180,19 @@ export const AgentDashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-8 py-4 text-slate-500">{v.serviceNom}</td>
-                      <td className="px-8 py-4 text-slate-500 italic">{v.motifLibelle || '-'}</td>
                       <td className="px-8 py-4 text-slate-500">{v.fonctionnaireNom || '-'}</td>
+                      <td className="px-8 py-4 text-center text-slate-500 tabular-nums font-bold">
+                        {v.heureArrivee ? v.heureArrivee.substring(11, 16) : '-'}
+                      </td>
+                      <td className="px-8 py-4 text-center text-blue-600 tabular-nums font-bold">
+                        {v.heureAcceptation ? v.heureAcceptation.substring(11, 16) : '-'}
+                      </td>
+                      <td className="px-8 py-4 text-center text-slate-500 tabular-nums font-bold">
+                        {v.heureCloture ? v.heureCloture.substring(11, 16) : '-'}
+                      </td>
+                      <td className="px-8 py-4 text-center text-emerald-600 tabular-nums font-bold">
+                        {v.heureRestitutionBadge ? v.heureRestitutionBadge.substring(11, 16) : '-'}
+                      </td>
                       <td className="px-8 py-4 text-right">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase">
                           <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span>

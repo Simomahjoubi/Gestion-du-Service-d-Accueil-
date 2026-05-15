@@ -114,6 +114,7 @@ public class VisiteController {
                 .heureEntree(visite.getHeureEntree())
                 .heureSortie(visite.getHeureSortie())
                 .heureCloture(visite.getHeureCloture())
+                .heureRestitutionBadge(visite.getHeureRestitutionBadge())
                 .motifLibelle(visite.getObjetVisite() != null ? visite.getObjetVisite().getLibelleFr() : "—")
                 .serviceNom(visite.getService() != null ? visite.getService().getNom() : "—")
                 .build();

@@ -3,7 +3,7 @@ import {
   Document, Page, Text, View, StyleSheet, Image,
   Svg, Rect, Circle, G, Line, Path,
 } from '@react-pdf/renderer';
-import logoSrc from '../../assets/logoBase64';
+import logoSrc from '../../assets/logo.jpg';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 interface Rendement {
