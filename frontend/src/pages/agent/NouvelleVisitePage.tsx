@@ -231,16 +231,40 @@ export const NouvelleVisitePage: React.FC = () => {
                 <User size={16} /> Profil du Visiteur
               </h3>
             </div>
-            <div className="p-8 flex flex-col md:flex-row gap-10">
-              <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center border-4 border-white shadow-inner flex-shrink-0 self-center md:self-start">
-                <User size={48} className="text-gray-400" />
+            <div className="p-10 flex flex-col md:flex-row gap-12 items-start">
+              {/* Photo Section - Large and Visible */}
+              <div className="flex-shrink-0">
+                <div className="w-56 h-56 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center border-4 border-white shadow-xl ring-1 ring-gray-100 relative overflow-hidden group">
+                  <User size={80} className="text-gray-300 group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-slate-900/5 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-widest shadow-sm">
+                      Identité
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <span className="px-4 py-1.5 bg-emerald-50 text-emerald-700 text-[11px] font-extrabold rounded-full border border-emerald-100 uppercase tracking-widest inline-flex items-center gap-2 shadow-sm">
+                    <CheckCircle2 size={14} /> Dossier Validé
+                  </span>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 flex-1">
-                <InfoRow label="Nom complet" value={`${foundVisitor?.nom} ${foundVisitor?.prenom}`} icon={<User size={16} />} />
-                <InfoRow label="CIN / Identifiant" value={foundVisitor?.cin || 'N/A'} icon={<CreditCard size={16} />} />
-                <InfoRow label="Téléphone" value={foundVisitor?.telephone || 'N/A'} icon={<Phone size={16} />} />
-                <InfoRow label="Sexe" value={foundVisitor?.sexe || 'N/A'} icon={<User size={16} />} />
-                <InfoRow label="Situation Familiale" value={foundVisitor?.situationFamiliale || 'N/A'} icon={<Heart size={16} />} />
+
+              {/* Data Section */}
+              <div className="flex-1 space-y-8">
+                <div>
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Identité complète</h4>
+                  <h2 className="text-[18px] font-extrabold text-slate-800 uppercase tracking-tight">
+                    {foundVisitor?.nom} {foundVisitor?.prenom}
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
+                  <InfoRow label="N° Adhésion" value={foundVisitor?.numAdhesion || 'N/A'} icon={<Search size={14} />} />
+                  <InfoRow label="CIN / Identifiant" value={foundVisitor?.cin || 'N/A'} icon={<CreditCard size={14} />} />
+                  <InfoRow label="Téléphone" value={foundVisitor?.telephone || 'N/A'} icon={<Phone size={14} />} />
+                  <InfoRow label="Sexe" value={foundVisitor?.sexe || 'N/A'} icon={<User size={14} />} />
+                  <InfoRow label="Situation Familiale" value={foundVisitor?.situationFamiliale || 'N/A'} icon={<Heart size={14} />} />
+                </div>
               </div>
             </div>
           </div>
