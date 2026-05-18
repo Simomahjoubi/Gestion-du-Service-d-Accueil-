@@ -56,19 +56,20 @@ public class AffectationService {
         List<Utilisateur> responsables = utilisateurRepo
                 .findByServiceIdAndRoleAndActifTrue(serviceId, RoleUtilisateur.RESPONSABLE);
 
-        if (!responsables.isEmpty()) {
-            // Préférer disponible, sinon prendre le premier quand même (VIP ne peut pas attendre)
-            return responsables.stream()
-                    .filter(u -> !STATUTS_INDISPONIBLES.contains(u.getStatutPresence()))
-                    .findFirst()
-                    .orElse(responsables.get(0));
+        if (responsables.isEmpty()) {
+            throw new RuntimeException(
+                "Aucun responsable de service actif n'est configuré pour ce service."
+            );
         }
 
-        // Aucun RESPONSABLE configuré → erreur explicite, pas de fallback
-        throw new RuntimeException(
-            "Aucun responsable de service actif n'est configuré pour ce service. " +
-            "Veuillez créer un utilisateur avec le rôle RESPONSABLE."
-        );
+        // Vérifier si au moins un responsable est disponible
+        return responsables.stream()
+                .filter(u -> !STATUTS_INDISPONIBLES.contains(u.getStatutPresence()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(
+                    "Le responsable de ce service est actuellement indisponible (Congé/Réunion/Mission). " +
+                    "Veuillez patienter ou essayer ultérieurement."
+                ));
     }
 
     // ── SPECIFIQUE ───────────────────────────────────────────────────────────
@@ -80,10 +81,10 @@ public class AffectationService {
                 .toList();
 
         if (priorites.isEmpty()) {
-            throw new RuntimeException("Aucun fonctionnaire configuré pour ce motif (SPECIFIQUE).");
+            throw new RuntimeException("Aucun fonctionnaire configuré pour ce motif spécifique.");
         }
 
-        // Parcourir p1 → p2 → p3 ; sauter les indisponibles
+        // Parcourir p1 → p2 → p3 ; retourner le premier disponible
         for (MotifAffectation ma : priorites) {
             Utilisateur u = ma.getUtilisateur();
             if (u.isActif() && !STATUTS_INDISPONIBLES.contains(u.getStatutPresence())) {
@@ -91,34 +92,38 @@ public class AffectationService {
             }
         }
 
-        // Tous indisponibles → préférer REUNION (sera disponible bientôt) sinon p1
-        return priorites.stream()
-                .map(MotifAffectation::getUtilisateur)
-                .filter(u -> "REUNION".equals(u.getStatutPresence()))
-                .findFirst()
-                .orElse(priorites.get(0).getUtilisateur());
+        // Tous indisponibles
+        throw new RuntimeException(
+            "Tous les fonctionnaires affectés à ce motif sont actuellement indisponibles. " +
+            "Veuillez attendre qu'un fonctionnaire se libère ou essayer ultérieurement."
+        );
     }
 
     // ── ALEATOIRE ────────────────────────────────────────────────────────────
 
     private Utilisateur appliquerAleatoire(Long serviceId) {
-        // Uniquement les FONCTIONNAIRE du service (pas le responsable — réservé aux VIP)
+        // Uniquement les FONCTIONNAIRE du service
         List<Utilisateur> fonctionnaires = utilisateurRepo
                 .findByServiceIdAndRoleAndActifTrue(serviceId, RoleUtilisateur.FONCTIONNAIRE);
 
         if (fonctionnaires.isEmpty()) {
-            throw new RuntimeException("Aucun fonctionnaire actif affecté à ce service.");
+            throw new RuntimeException("Aucun fonctionnaire actif n'est affecté à ce service.");
         }
 
         List<Utilisateur> disponibles = fonctionnaires.stream()
                 .filter(u -> !STATUTS_INDISPONIBLES.contains(u.getStatutPresence()))
                 .toList();
 
-        List<Utilisateur> candidats = disponibles.isEmpty() ? fonctionnaires : disponibles;
+        if (disponibles.isEmpty()) {
+            throw new RuntimeException(
+                "Tous les fonctionnaires de ce service sont actuellement indisponibles (Congé/Réunion/Mission). " +
+                "Veuillez attendre qu'un fonctionnaire soit libre pour accueillir la visite."
+            );
+        }
 
-        // Parmi les candidats, prendre celui avec le moins de visites NON CLÔTURÉES
-        return candidats.stream()
+        // Parmi les disponibles, prendre celui avec le moins de visites NON CLÔTURÉES
+        return disponibles.stream()
                 .min(Comparator.comparingLong(u -> visiteRepo.countNonCloturees(u.getId())))
-                .orElse(candidats.get(0));
+                .orElse(disponibles.get(0));
     }
 }

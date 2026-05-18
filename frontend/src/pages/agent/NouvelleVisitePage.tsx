@@ -56,6 +56,9 @@ export const NouvelleVisitePage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [savedVisite, setSavedVisite] = useState<SavedVisite | null>(null);
 
+  const [showUnavailabilityModal, setShowUnavailabilityModal] = useState(false);
+  const [unavailabilityMessage, setUnavailabilityMessage] = useState('');
+
   useEffect(() => {
     serviceService.getAll().then(setServices).catch(() => {});
   }, []);
@@ -110,7 +113,13 @@ export const NouvelleVisitePage: React.FC = () => {
       setSavedVisite(response.data);
       setShowModal(true);
     } catch (err: any) { 
-      setError(err?.response?.data?.error || "Erreur lors de l'enregistrement de la visite."); 
+      const msg = err?.response?.data?.error || "Erreur lors de l'enregistrement de la visite.";
+      if (msg.includes("indisponible") || msg.includes("patienter")) {
+        setUnavailabilityMessage(msg);
+        setShowUnavailabilityModal(true);
+      } else {
+        setError(msg);
+      }
     } finally { setLoading(false); }
   };
 
@@ -403,6 +412,38 @@ export const NouvelleVisitePage: React.FC = () => {
                 className="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg transition-all mt-4"
               >
                 Terminer et Retourner au Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUnavailabilityModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-amber-500 p-6 text-white text-center relative">
+              <button 
+                onClick={() => setShowUnavailabilityModal(false)}
+                className="absolute right-4 top-4 p-1 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={32} />
+              </div>
+              <h2 className="text-xl font-bold">Fonctionnaires Indisponibles</h2>
+            </div>
+            
+            <div className="p-8 text-center space-y-6">
+              <p className="text-gray-600 font-medium leading-relaxed">
+                {unavailabilityMessage}
+              </p>
+
+              <button 
+                onClick={() => setShowUnavailabilityModal(false)}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg transition-all"
+              >
+                J'ai compris
               </button>
             </div>
           </div>
