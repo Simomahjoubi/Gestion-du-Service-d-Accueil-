@@ -43,7 +43,7 @@ export const AgentLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               active={isActive('/agent')} 
               onClick={() => navigate('/agent')} 
             />
-            <NavItem 
+            <NavItem                                                                                                                                                                                                                                                                 
               icon={<UserPlus size={16}/>} 
               label="Nouvelle Visite" 
               active={isActive('/agent/nouvelle-visite')} 
