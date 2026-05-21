@@ -1,35 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Search,
-  User,
-  Users,
-  ArrowRight,
-  ChevronLeft,
-  Star,
-  Building2,
-  ClipboardList,
-  AlertCircle,
-  HeartPulse,
-  ShieldCheck,
+import { 
+  ChevronLeft, 
+  Star, 
+  ClipboardList, 
+  ArrowRight, 
+  AlertCircle, 
+  Search, 
+  User, 
+  ShieldCheck, 
+  MapPin, 
+  Briefcase,
+  Phone,
   CreditCard,
-  UserPlus,
+  Heart,
+  UserCheck,
   CheckCircle2,
-  Tag,
+  X,
+  Clock,
+  UserCog
 } from 'lucide-react';
-
 import { visiteurService, Visiteur as Visitor } from '../../services/visiteurService';
 import { serviceService, Service, Motif } from '../../services/serviceService';
 import api from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 
-interface VisiteCreatedResult {
-  id: number;
+interface SavedVisite {
   visiteurNom: string;
-  fonctionnaireNom: string;
   serviceNom: string;
+  motifLibelle: string;
+  fonctionnaireNom: string;
   badgeCode: string;
-  heureArrivee: string;
 }
 
 export const NouvelleVisitePage: React.FC = () => {
@@ -38,32 +39,30 @@ export const NouvelleVisitePage: React.FC = () => {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
 
-  // Services & Motifs states
   const [services, setServices] = useState<Service[]>([]);
   const [motifs, setMotifs] = useState<Motif[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [selectedMotifId, setSelectedMotifId] = useState<string>('');
 
-  // Form states
   const [searchType, setSearchType] = useState('CIN');
   const [searchId, setSearchId] = useState('');
-  const [searchResults, setSearchResults] = useState<Visitor[]>([]);
   const [foundVisitor, setFoundVisitor] = useState<Visitor | null>(null);
 
   const [isVip, setIsVip] = useState(false);
   const [notes, setNotes] = useState('');
 
-  // Confirmation modal
-  const [confirmation, setConfirmation] = useState<VisiteCreatedResult | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [savedVisite, setSavedVisite] = useState<SavedVisite | null>(null);
 
-  // Charger les services au démarrage
+  const [showUnavailabilityModal, setShowUnavailabilityModal] = useState(false);
+  const [unavailabilityMessage, setUnavailabilityMessage] = useState('');
+
   useEffect(() => {
     serviceService.getAll().then(setServices).catch(() => {});
   }, []);
 
-  // Charger les motifs quand le service change
   useEffect(() => {
     if (selectedServiceId) {
       serviceService.getMotifs(selectedServiceId)
@@ -74,385 +73,421 @@ export const NouvelleVisitePage: React.FC = () => {
     }
   }, [selectedServiceId]);
 
-  // Recherche via API
   const handleSearch = async () => {
-    setLoading(true);
-    setError('');
-    setSearchResults([]);
-    setFoundVisitor(null);
-
-    try {
-      let results: Visitor[] = [];
-      if (searchType === 'CIN') {
-        try {
-          const v = await visiteurService.rechercherParCin(searchId);
-          if (v) results = [v];
-        } catch (e: any) {
-          if (e.response?.status !== 404) throw e;
-        }
-      } else if (searchType === 'ADHESION') {
-        try {
-          const v = await visiteurService.rechercherParNumAdhesion(searchId);
-          if (v) results = [v];
-        } catch (e: any) {
-          if (e.response?.status !== 404) throw e;
-        }
-      } else {
-        results = await visiteurService.rechercherParNom(searchId);
-      }
-
-      if (results.length === 0) {
-        setError('Aucun visiteur trouvé.');
-      } else if (results.length === 1) {
-        setFoundVisitor(results[0]);
-        setStep(2);
-      } else {
-        setSearchResults(results);
-      }
-    } catch {
-      setError('Erreur lors de la recherche du visiteur.');
-    } finally {
-      setLoading(false);
+    if (!searchId) {
+      setError('Veuillez saisir un identifiant.');
+      return;
     }
+    setLoading(true); setError('');
+    try {
+      let v: Visitor | null = null;
+      if (searchType === 'CIN') v = await visiteurService.rechercherParCin(searchId);
+      else if (searchType === 'ADHESION') v = await visiteurService.rechercherParNumAdhesion(searchId);
+      
+      if (v) { 
+        setFoundVisitor(v); 
+        setStep(2); 
+      } else {
+        setError('Visiteur non trouvé dans la base de données.');
+      }
+    } catch (err: any) { 
+      setError(err?.response?.data?.error || 'Erreur lors de la recherche du visiteur.'); 
+    } finally { setLoading(false); }
   };
 
-  const selectVisitor = (v: Visitor) => {
-    setFoundVisitor(v);
-    setStep(2);
-  };
+  const [showOccupiedModal, setShowOccupiedModal] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedServiceId) { alert('Veuillez sélectionner un service.'); return; }
-    if (!selectedMotifId)   { alert('Veuillez sélectionner un motif.'); return; }
-    if (!foundVisitor)      return;
-
+    if (!selectedServiceId || !selectedMotifId || !foundVisitor) {
+      setError('Veuillez sélectionner un service et un motif.');
+      return;
+    }
     setLoading(true);
-    setError('');
     try {
       const response = await api.post('/visites/enregistrer', {
-        visiteurId:    foundVisitor.id,
+        visiteurId: foundVisitor.id,
         objetVisiteId: Number(selectedMotifId),
-        notes,
-        isVip,
-        agentId:       user?.id,
+        notes, 
+        isVip, 
+        agentId: user?.id,
       });
-      const data = response.data;
-      setConfirmation({
-        id:               data.id,
-        visiteurNom:      data.visiteurNom,
-        fonctionnaireNom: data.fonctionnaireNom,
-        serviceNom:       data.serviceNom,
-        badgeCode:        data.badgeCode,
-        heureArrivee:     data.heureArrivee,
-      });
-    } catch (err: any) {
-      const d = err.response?.data;
-      const msg = d?.message || d?.error || (typeof d === 'string' ? d : null) || err.message || 'Erreur lors de la création de la visite.';
-      setError(String(msg));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getServiceIcon = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes('estivage')) return <Star size={16}/>;
-    if (n.includes('ordre'))    return <ClipboardList size={16}/>;
-    if (n.includes('adhésion')) return <UserPlus size={16}/>;
-    if (n.includes('médical'))  return <HeartPulse size={16}/>;
-    if (n.includes('info'))     return <Search size={16}/>;
-    if (n.includes('assurance')) return <ShieldCheck size={16}/>;
-    if (n.includes('finance'))  return <CreditCard size={16}/>;
-    if (n.includes('tech'))     return <Building2 size={16}/>;
-    return <Users size={16}/>;
+      setSavedVisite(response.data);
+      if (response.data.fonctionnaireOccupe) {
+        setShowOccupiedModal(true);
+      } else {
+        setShowModal(true);
+      }
+    } catch (err: any) { 
+      const msg = err?.response?.data?.error || "Erreur lors de l'enregistrement de la visite.";
+      if (msg.includes("indisponible") || msg.includes("patienter")) {
+        setUnavailabilityMessage(msg);
+        setShowUnavailabilityModal(true);
+      } else {
+        setError(msg);
+      }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="w-full">
-      {/* Header */}
+    <div className="w-full pb-12">
       <div className="flex items-center justify-between mb-8">
-        <button
-          onClick={() => step === 1 ? navigate('/agent') : setStep(1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
+        <button 
+          onClick={() => step === 1 ? navigate('/agent') : setStep(1)} 
+          className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors font-medium group"
         >
-          <ChevronLeft size={20} />
-          <span>{step === 1 ? 'Retour au tableau de bord' : 'Changer de visiteur'}</span>
+          <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+            <ChevronLeft size={20} />
+          </div>
+          <span className="text-[13px]">Retour {step === 2 && "à l'identification"}</span>
         </button>
-        <div className="flex items-center gap-2">
-          <span className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`}/>
-          <div className="w-10 h-0.5 bg-gray-200"/>
-          <span className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}/>
+        <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${step === 1 ? 'bg-primary' : 'bg-green-500'}`}></div>
+            <div className={`w-20 h-1 rounded-full ${step === 2 ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+            <div className={`w-3 h-3 rounded-full ${step === 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-[13px] font-medium flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+          <div className="p-2 bg-red-100 rounded-lg text-red-600">
+            <AlertCircle size={18} />
+          </div>
+          {error}
+        </div>
+      )}
+
       {step === 1 ? (
-        /* ── ÉTAPE 1 : RECHERCHE ── */
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search size={32} />
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all max-w-4xl mx-auto">
+          <div className="p-8 border-b border-gray-50 flex flex-col items-center text-center bg-gray-50/30">
+            <div className="w-12 h-12 bg-white border border-gray-100 shadow-sm text-primary rounded-2xl flex items-center justify-center mb-4">
+              <UserCheck size={24} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">Identifier le visiteur</h1>
-            <p className="text-gray-500 mt-2">Recherchez l'adhérent ou le visiteur dans la base de données</p>
+            <h1 className="text-xl font-bold text-gray-800">Identification du Visiteur</h1>
+            <p className="text-gray-500 text-[13px] mt-1 font-medium">Rechercher par CIN ou numéro d'adhésion pour commencer</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            <div className="col-span-1">
-              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Rechercher par</label>
-              <select
-                value={searchType}
-                onChange={e => setSearchType(e.target.value)}
-                className="w-full border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-3 bg-gray-50"
-              >
-                <option value="CIN">CIN</option>
-                <option value="ADHESION">N° Adhésion</option>
-                <option value="NOM">Nom / Prénom</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Valeur à rechercher</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchId}
-                  onChange={e => setSearchId(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && searchId && handleSearch()}
-                  placeholder={searchType === 'NOM' ? 'Ex: Alami' : "Entrez l'identifiant"}
-                  className="w-full border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-3 pl-10"
+          
+          <div className="p-10">
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              <div className="relative flex-shrink-0 w-full md:w-48">
+                <select 
+                  value={searchType} 
+                  onChange={e => setSearchType(e.target.value)} 
+                  className="w-full appearance-none bg-gray-50 border-gray-200 rounded-xl py-4 pl-4 pr-10 focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium text-gray-700 text-[13px]"
+                >
+                  <option value="CIN">CIN</option>
+                  <option value="ADHESION">N° Adhésion</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <ChevronLeft size={16} className="-rotate-90" />
+                </div>
+              </div>
+              
+              <div className="relative flex-1">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={20} />
+                </div>
+                <input 
+                  type="text" 
+                  value={searchId} 
+                  onChange={e => setSearchId(e.target.value)} 
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  className="w-full bg-gray-50 border-gray-200 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium text-[13px] uppercase" 
+                  placeholder={searchType === 'CIN' ? "Ex: AB123456" : "Ex: 12345678"} 
                 />
-                <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
               </div>
             </div>
-          </div>
-
-          {searchResults.length > 1 && (
-            <div className="mt-8 w-full">
-              <h3 className="text-sm font-bold text-gray-500 mb-4 flex items-center gap-2">
-                <Users size={16} /> {searchResults.length} résultats trouvés
-              </h3>
-              <div className="space-y-3">
-                {searchResults.map(v => (
-                  <div
-                    key={v.id}
-                    onClick={() => selectVisitor(v)}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-all group"
-                  >
-                    <div>
-                      <p className="font-bold text-gray-800 group-hover:text-blue-700">{v.nom} {v.prenom}</p>
-                      <p className="text-xs text-gray-500">CIN: {v.cin} | Type: {v.type}</p>
-                    </div>
-                    <ArrowRight size={18} className="text-gray-300 group-hover:text-blue-500" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-6 flex items-center gap-2 text-red-600 justify-center text-sm font-medium">
-              <AlertCircle size={16} /> {error}
-            </div>
-          )}
-
-          <div className="mt-10 flex justify-center">
-            <button
-              onClick={handleSearch}
-              disabled={loading || !searchId}
-              className="bg-blue-600 text-white px-10 py-3 rounded-full font-bold hover:bg-blue-700 transition-all flex items-center gap-3 shadow-lg shadow-blue-200 disabled:opacity-50"
+            
+            <button 
+              onClick={handleSearch} 
+              disabled={loading}
+              className="w-full bg-primary hover:bg-blue-800 text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg shadow-blue-700/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-70"
             >
-              {loading ? 'Recherche en cours...' : 'Rechercher'}
-              {!loading && <ArrowRight size={20} />}
+              {loading ? (
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>Rechercher <ArrowRight size={20} /></>
+              )}
             </button>
           </div>
         </div>
       ) : (
-        /* ── ÉTAPE 2 : FORMULAIRE ── */
-        <form onSubmit={handleRegister} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Info Visiteur */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-slate-800 text-white rounded-full flex items-center justify-center text-2xl font-bold mb-4">
-                  {foundVisitor?.nom.charAt(0)}{foundVisitor?.prenom.charAt(0)}
-                </div>
-                <h2 className="text-xl font-bold text-gray-800">{foundVisitor?.nom} {foundVisitor?.prenom}</h2>
-                <div className="flex flex-wrap justify-center gap-2 mt-2">
-                  <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                    {foundVisitor?.type}
-                  </span>
-                  {foundVisitor?.statutAdherent && (
-                    <span className={`${foundVisitor.statutAdherent === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest`}>
-                      {foundVisitor.statutAdherent}
+        <div className="space-y-8 animate-in fade-in duration-500">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <InfoCard 
+              title="Type Adhérent" 
+              value={foundVisitor?.typeAdherentDetail || 'N/A'} 
+              icon={<User className="text-blue-600" size={20} />}
+              colorClass="bg-blue-50 border-blue-100 text-blue-900"
+            />
+            <InfoCard 
+              title="Grade / Echelle" 
+              value={foundVisitor?.grade || 'N/A'} 
+              icon={<Briefcase className="text-emerald-600" size={20} />}
+              colorClass="bg-emerald-50 border-emerald-100 text-emerald-900"
+            />
+            <InfoCard 
+              title="Affectation" 
+              value={foundVisitor?.affectation || 'N/A'} 
+              icon={<MapPin className="text-amber-600" size={20} />}
+              colorClass="bg-amber-50 border-amber-100 text-amber-900"
+            />
+            <InfoCard 
+              title="Assurance" 
+              value={foundVisitor?.typeAssurance || 'N/A'} 
+              icon={<ShieldCheck className="text-indigo-600" size={20} />}
+              colorClass="bg-indigo-50 border-indigo-100 text-indigo-900"
+            />
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="border-b border-gray-50 bg-gray-50/50 px-8 py-4">
+              <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <User size={16} /> Profil du Visiteur
+              </h3>
+            </div>
+            <div className="p-10 flex flex-col md:flex-row gap-12 items-start">
+              {/* Photo Section - Large and Visible */}
+              <div className="flex-shrink-0">
+                <div className="w-56 h-56 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center border-4 border-white shadow-xl ring-1 ring-gray-100 relative overflow-hidden group">
+                  <User size={80} className="text-gray-300 group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-slate-900/5 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-slate-600 uppercase tracking-widest shadow-sm">
+                      Identité
                     </span>
-                  )}
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <span className="px-4 py-1.5 bg-emerald-50 text-emerald-700 text-[11px] font-extrabold rounded-full border border-emerald-100 uppercase tracking-widest inline-flex items-center gap-2 shadow-sm">
+                    <CheckCircle2 size={14} /> Dossier Validé
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-8 space-y-4 border-t border-gray-50 pt-6">
-                {foundVisitor?.type === 'ADHERENT' && (
-                  <>
-                    <InfoRow label="CIN" value={foundVisitor.cin || 'N/A'} />
-                    <InfoRow label="N° Adhérent" value={foundVisitor.numAdhesion || 'N/A'} color="text-blue-600" />
-                    <div className="pt-2 mt-2 border-t border-dashed border-gray-100 space-y-3">
-                      <InfoRow label="Type Adhérent" value={foundVisitor.typeAdherentDetail || 'N/A'} />
-                      <InfoRow label="Grade" value={foundVisitor.grade || 'N/A'} />
-                      <InfoRow label="Affectation" value={foundVisitor.affectation || 'N/A'} color="text-slate-900" />
-                      <InfoRow label="Assurance" value={foundVisitor.typeAssurance || 'N/A'}
-                        color={foundVisitor.typeAssurance?.toLowerCase().includes('non') ? 'text-red-600' : 'text-green-600'}
-                      />
-                    </div>
-                  </>
-                )}
-                {foundVisitor?.type === 'CONJOINT' && (
-                  <>
-                    <InfoRow label="CIN Conjoint" value={foundVisitor.cin || 'N/A'} />
-                    <InfoRow label="Lien" value={foundVisitor.lienParente || 'ÉPOUSE'} color="text-purple-600" />
-                  </>
-                )}
-                {foundVisitor?.type === 'ENFANT' && (
-                  <>
-                    <InfoRow label="CIN Enfant" value={foundVisitor.cin || 'N/A'} />
-                    <InfoRow label="Lien" value={foundVisitor.lienParente || 'ENFANT'} color="text-purple-600" />
-                  </>
-                )}
+              {/* Data Section */}
+              <div className="flex-1 space-y-8">
+                <div>
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Identité complète</h4>
+                  <h2 className="text-[18px] font-extrabold text-slate-800 uppercase tracking-tight">
+                    {foundVisitor?.nom} {foundVisitor?.prenom}
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
+                  <InfoRow label="N° Adhésion" value={foundVisitor?.numAdhesion || 'N/A'} icon={<Search size={14} />} />
+                  <InfoRow label="CIN / Identifiant" value={foundVisitor?.cin || 'N/A'} icon={<CreditCard size={14} />} />
+                  <InfoRow label="Téléphone" value={foundVisitor?.telephone || 'N/A'} icon={<Phone size={14} />} />
+                  <InfoRow label="Sexe" value={foundVisitor?.sexe || 'N/A'} icon={<User size={14} />} />
+                  <InfoRow label="Situation Familiale" value={foundVisitor?.situationFamiliale || 'N/A'} icon={<Heart size={14} />} />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Formulaire Visite */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <ClipboardList className="text-blue-600" size={20} />
+          <form onSubmit={handleRegister} className="bg-white rounded-3xl shadow-lg shadow-gray-200/50 border border-gray-100 overflow-hidden">
+            <div className="border-b border-gray-50 bg-gray-50/50 px-8 py-5">
+              <h3 className="text-[15px] font-bold text-gray-800 flex items-center gap-3">
+                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                  <ClipboardList size={20} />
+                </div>
                 Détails de la visite
               </h3>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Service cible</label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {services.map(s => (
-                      <ServiceToggle
-                        key={s.id}
-                        label={s.nom}
-                        icon={getServiceIcon(s.nom)}
-                        selected={selectedServiceId === s.id}
-                        onClick={() => setSelectedServiceId(s.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Motif de la visite</label>
-                  <select
-                    value={selectedMotifId}
-                    onChange={e => setSelectedMotifId(e.target.value)}
-                    required
-                    className="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3"
+            </div>
+            
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-gray-700 ml-1">Service sollicité</label>
+                  <select 
+                    value={selectedServiceId || ''} 
+                    onChange={e => setSelectedServiceId(Number(e.target.value))} 
+                    className="w-full bg-gray-50 border-gray-200 rounded-xl py-3.5 focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-[13px] font-bold uppercase"
                   >
-                    <option value="">Sélectionnez un motif...</option>
-                    {motifs.map(m => (
-                      <option key={m.id} value={m.id}>{m.libelleFr}</option>
-                    ))}
+                    <option value="" className="normal-case">Sélectionner un service...</option>
+                    {services.map(s => <option key={s.id} value={s.id}>{s.nom.toUpperCase()}</option>)}
                   </select>
                 </div>
-
-                <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-yellow-800">Priorité VIP</p>
-                    <p className="text-xs text-yellow-700">Affecter au responsable du service</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={isVip}
-                    onChange={e => setIsVip(e.target.checked)}
-                    className="w-6 h-6 rounded text-yellow-600 focus:ring-yellow-500 border-yellow-300"
-                  />
-                  <Star size={20} className={isVip ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-300'} />
+                
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-gray-700 ml-1">Motif de la visite</label>
+                  <select 
+                    value={selectedMotifId} 
+                    onChange={e => setSelectedMotifId(e.target.value)} 
+                    disabled={!selectedServiceId}
+                    className="w-full bg-gray-50 border-gray-200 rounded-xl py-3.5 focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 text-[13px] font-bold uppercase"
+                  >
+                    <option value="" className="normal-case">Sélectionner un motif...</option>
+                    {motifs.map(m => <option key={m.id} value={m.id}>{m.libelleFr.toUpperCase()}</option>)}
+                  </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Notes (Optionnel)</label>
-                  <textarea
-                    rows={3}
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 p-3"
-                    placeholder="Informations complémentaires..."
+              <div className={`flex items-center gap-4 p-5 rounded-2xl border transition-all ${isVip ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="relative">
+                  <input 
+                    type="checkbox" 
+                    id="vip-toggle"
+                    checked={isVip} 
+                    onChange={e => setIsVip(e.target.checked)} 
+                    className="sr-only peer"
                   />
+                  <label htmlFor="vip-toggle" className="w-12 h-6 bg-gray-300 peer-checked:bg-amber-500 rounded-full flex items-center px-1 cursor-pointer transition-colors duration-300">
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${isVip ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                  </label>
                 </div>
+                <div className="flex-1">
+                  <label htmlFor="vip-toggle" className={`text-[13px] font-bold cursor-pointer ${isVip ? 'text-amber-800' : 'text-gray-600'}`}>Priorité VIP / Cas Spécial</label>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Activer pour accorder une priorité immédiate à cette visite.</p>
+                </div>
+                <Star size={24} className={`${isVip ? 'text-amber-500 fill-amber-500 animate-pulse' : 'text-gray-300'}`} />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-gray-700 ml-1">Notes ou observations (facultatif)</label>
+                <textarea 
+                  rows={4} 
+                  value={notes} 
+                  onChange={e => setNotes(e.target.value)} 
+                  className="w-full bg-gray-50 border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none text-[13px]" 
+                  placeholder="Informations complémentaires utiles..." 
+                />
               </div>
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 text-red-600 text-sm font-medium bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                <AlertCircle size={16} /> {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-60"
-            >
-              {loading ? 'Enregistrement...' : 'Valider l\'arrivée et assigner un badge'}
-              {!loading && <ArrowRight size={20} />}
-            </button>
-          </div>
-        </form>
+            <div className="p-8 bg-gray-50 border-t border-gray-100">
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-2xl font-bold text-[15px] shadow-xl shadow-slate-200 transition-all active:scale-[0.99] flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>Valider et Enregistrer la visite <ArrowRight size={20} /></>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
-      {/* ── Modal de confirmation ── */}
-      {confirmation && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-5">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <CheckCircle2 size={28} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-white font-bold text-lg">Visite enregistrée</p>
-                  <p className="text-emerald-100 text-xs">Notification envoyée au fonctionnaire</p>
+      {showModal && savedVisite && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-emerald-500 p-6 text-white text-center relative">
+              <button 
+                onClick={() => navigate('/agent')}
+                className="absolute right-4 top-4 p-1 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={32} />
+              </div>
+              <h2 className="text-2xl font-bold">Visite Enregistrée !</h2>
+              <p className="text-emerald-50 opacity-90 mt-1">La visite a été créée avec succès</p>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="space-y-4">
+                <ModalRow label="Visiteur" value={savedVisite.visiteurNom} icon={<User size={18} />} />
+                <ModalRow label="Service" value={savedVisite.serviceNom} icon={<ShieldCheck size={18} />} />
+                <ModalRow label="Motif" value={savedVisite.motifLibelle} icon={<ClipboardList size={18} />} />
+                <div className="pt-4 border-t border-gray-100">
+                  <ModalRow 
+                    label="Fonctionnaire affecté" 
+                    value={savedVisite.fonctionnaireNom} 
+                    icon={<UserCog size={18} />} 
+                    highlight 
+                  />
                 </div>
               </div>
-            </div>
 
-            {/* Details */}
-            <div className="p-6 space-y-4">
-              <ConfirmRow icon={<User size={16}/>}     label="Visiteur"       value={confirmation.visiteurNom} />
-              <ConfirmRow icon={<Tag size={16}/>}      label="Badge assigné"  value={confirmation.badgeCode} highlight />
-              <ConfirmRow icon={<Users size={16}/>}    label="Fonctionnaire"  value={confirmation.fonctionnaireNom} />
-              <ConfirmRow icon={<Building2 size={16}/>} label="Service"       value={confirmation.serviceNom} />
-            </div>
+              <div className="bg-blue-50 rounded-2xl p-4 flex items-center gap-4 border border-blue-100 mt-6">
+                <div className="p-3 bg-white rounded-xl shadow-sm text-blue-600">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-blue-800 uppercase tracking-wider">Statut</p>
+                  <p className="text-sm font-medium text-blue-600">En attente de réception</p>
+                </div>
+              </div>
 
-            <div className="px-6 pb-6 flex gap-3">
-              <button
-                onClick={() => {
-                  setConfirmation(null);
-                  navigate('/agent');
-                }}
-                className="flex-1 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all"
+              <button 
+                onClick={() => navigate('/agent')}
+                className="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg transition-all mt-4"
               >
-                Retour au tableau de bord
+                Terminer et Retourner au Dashboard
               </button>
-              <button
-                onClick={() => {
-                  setConfirmation(null);
-                  setStep(1);
-                  setFoundVisitor(null);
-                  setSearchId('');
-                  setSelectedServiceId(null);
-                  setSelectedMotifId('');
-                  setIsVip(false);
-                  setNotes('');
-                }}
-                className="flex-1 py-3 text-sm font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-xl transition-all"
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUnavailabilityModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-amber-500 p-6 text-white text-center relative">
+              <button 
+                onClick={() => setShowUnavailabilityModal(false)}
+                className="absolute right-4 top-4 p-1 hover:bg-white/20 rounded-lg transition-colors"
               >
-                Nouvelle visite
+                <X size={20} />
+              </button>
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={32} />
+              </div>
+              <h2 className="text-xl font-bold">Fonctionnaires Indisponibles</h2>
+            </div>
+            
+            <div className="p-8 text-center space-y-6">
+              <p className="text-gray-600 font-medium leading-relaxed">
+                {unavailabilityMessage}
+              </p>
+
+              <button 
+                onClick={() => setShowUnavailabilityModal(false)}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg transition-all"
+              >
+                J'ai compris
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOccupiedModal && savedVisite && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-amber-100 p-8 text-center relative">
+              <button 
+                onClick={() => { setShowOccupiedModal(false); setShowModal(true); }}
+                className="absolute right-4 top-4 p-1 text-amber-600 hover:bg-amber-200 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <Clock size={40} className="text-amber-500 animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-black text-amber-900 uppercase tracking-tight">Fonctionnaire Occupé</h2>
+              <p className="text-amber-700 font-bold mt-2">
+                {savedVisite.fonctionnaireNom} traite actuellement une autre visite.
+              </p>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+                <p className="text-sm text-amber-900 leading-relaxed font-medium">
+                  Le dossier a bien été assigné, mais il sera placé dans la **file d'attente** de cet agent. 
+                  Veuillez informer le visiteur qu'il devra patienter quelques instants.
+                </p>
+              </div>
+
+              <button 
+                onClick={() => { setShowOccupiedModal(false); setShowModal(true); }}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg shadow-amber-200 transition-all flex items-center justify-center gap-2"
+              >
+                Continuer <ArrowRight size={20}/>
               </button>
             </div>
           </div>
@@ -462,36 +497,51 @@ export const NouvelleVisitePage: React.FC = () => {
   );
 };
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
-const InfoRow: React.FC<{ label: string; value: string; color?: string }> = ({ label, value, color }) => (
-  <div className="flex justify-between items-center text-sm">
-    <span className="text-gray-400 font-medium">{label}</span>
-    <span className={`font-bold ${color || 'text-gray-700'}`}>{value}</span>
-  </div>
-);
-
-const ServiceToggle: React.FC<{ label: string; icon: React.ReactNode; selected: boolean; onClick: () => void }> = ({ label, icon, selected, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all font-bold text-sm ${
-      selected
-        ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-sm'
-        : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-200'
-    }`}
-  >
-    {icon} {label}
-  </button>
-);
-
-const ConfirmRow: React.FC<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = ({ icon, label, value, highlight }) => (
-  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${highlight ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-50 text-blue-500'}`}>
+const ModalRow: React.FC<{ label: string; value: string; icon: React.ReactNode; highlight?: boolean }> = ({ label, value, icon, highlight }) => (
+  <div className="flex items-start gap-4">
+    <div className={`p-2 rounded-lg ${highlight ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
       {icon}
     </div>
     <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-sm font-bold ${highlight ? 'text-emerald-700' : 'text-gray-800'}`}>{value}</p>
+      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{label}</p>
+      <p className={`text-[15px] font-extrabold uppercase mt-0.5 ${highlight ? 'text-emerald-700' : 'text-gray-800'}`}>
+        {value}
+      </p>
     </div>
+  </div>
+);
+
+interface InfoCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  colorClass: string;
+}
+
+const InfoCard: React.FC<InfoCardProps> = ({ title, value, icon, colorClass }) => (
+  <div className={`p-5 rounded-2xl border shadow-sm ${colorClass} transition-all hover:translate-y-[-2px] hover:shadow-md duration-300`}>
+    <div className="flex items-center gap-3 mb-3">
+      <div className="p-2 rounded-xl bg-white/60 backdrop-blur-sm shadow-sm">
+        {icon}
+      </div>
+      <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-60">{title}</p>
+    </div>
+    <p className="text-[15px] font-extrabold truncate uppercase" title={value}>{value}</p>
+  </div>
+);
+
+interface InfoRowProps {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({ label, value, icon }) => (
+  <div className="flex flex-col gap-1.5">
+    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide flex items-center gap-2">
+      {icon && <span className="opacity-50">{icon}</span>}
+      {label}
+    </span>
+    <span className="font-extrabold text-gray-800 border-b border-gray-50 pb-2 text-[15px] uppercase">{value}</span>
   </div>
 );

@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { CATEGORIE_LABELS, ALL_CATEGORIES, ReferenceCategorie } from '../services/referenceService';
 
+import logo from '../assets/logo.png';
+
 export const MainLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -44,10 +46,7 @@ export const MainLayout: React.FC = () => {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
              <Menu className="text-gray-500 mr-2" size={20} />
-             <div className="flex flex-col leading-none">
-                <span className="text-[10px] font-bold text-red-600 uppercase">Fondation</span>
-                <span className="text-[10px] font-bold text-blue-700 uppercase">Hassan II</span>
-             </div>
+             <img src={logo} alt="Logo" className="h-16 w-auto object-contain pt-1" />
           </div>
 
           <nav className="hidden lg:flex items-center gap-1">
@@ -128,7 +127,7 @@ export const MainLayout: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto p-8 w-full">
         <Outlet />
       </main>
     </div>

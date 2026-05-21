@@ -57,6 +57,24 @@ public class VisiteController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/stats/hourly")
+    public ResponseEntity<List<Long>> getVisitesHourlyToday() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime debutJour = LocalDate.now().atStartOfDay();
+        List<Long> hourlyCounts = new java.util.ArrayList<>();
+        
+        for (int i = 0; i < 24; i++) {
+            LocalDateTime debutHeure = debutJour.plusHours(i);
+            LocalDateTime finHeure = debutJour.plusHours(i + 1);
+            if (debutHeure.isAfter(now)) {
+                hourlyCounts.add(0L);
+            } else {
+                hourlyCounts.add(visiteRepo.findByHeureArriveeBetween(debutHeure, finHeure).size() * 1L);
+            }
+        }
+        return ResponseEntity.ok(hourlyCounts);
+    }
+
     @GetMapping("/stats/today")
     public ResponseEntity<DashboardStatsResponse> getStatsToday() {
         LocalDateTime debutJour = LocalDate.now().atStartOfDay();
@@ -95,6 +113,13 @@ public class VisiteController {
 
     private VisiteResponse mapToResponse(Visite visite) {
         Visiteur v = visite.getVisiteur();
+        Utilisateur f = visite.getFonctionnaire();
+        
+        boolean occupe = false;
+        if (f != null) {
+            occupe = visiteRepo.existsByFonctionnaireIdAndStatut(f.getId(), StatutVisite.EN_COURS);
+        }
+
         return VisiteResponse.builder()
                 .id(visite.getId())
                 .visiteurId(v.getId())
@@ -105,8 +130,8 @@ public class VisiteController {
                 .typeAdherentDetail(v.getTypeAdherentDetail())
                 .grade(v.getGrade())
                 .typeAssurance(v.getTypeAssurance())
-                .fonctionnaireId(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getId() : null)
-                .fonctionnaireNom(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getNomComplet() : "Non assigné")
+                .fonctionnaireId(f != null ? f.getId() : null)
+                .fonctionnaireNom(f != null ? f.getNomComplet() : "Non assigné")
                 .badgeCode(visite.getBadge() != null ? visite.getBadge().getCode() : "—")
                 .statut(visite.getStatut())
                 .heureArrivee(visite.getHeureArrivee())
@@ -114,8 +139,10 @@ public class VisiteController {
                 .heureEntree(visite.getHeureEntree())
                 .heureSortie(visite.getHeureSortie())
                 .heureCloture(visite.getHeureCloture())
+                .heureRestitutionBadge(visite.getHeureRestitutionBadge())
                 .motifLibelle(visite.getObjetVisite() != null ? visite.getObjetVisite().getLibelleFr() : "—")
                 .serviceNom(visite.getService() != null ? visite.getService().getNom() : "—")
+                .fonctionnaireOccupe(occupe)
                 .build();
     }
 

@@ -28,4 +28,5 @@ public class VisiteResponse {
     private LocalDateTime heureRestitutionBadge;
     private String motifLibelle;
     private String serviceNom;
+    private boolean fonctionnaireOccupe;
 }

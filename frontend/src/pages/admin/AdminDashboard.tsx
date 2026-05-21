@@ -1,50 +1,94 @@
 import React from 'react';
-import { Users, TrendingUp, Activity } from 'lucide-react';
+import { Clock, PlusCircle, Settings, FileBarChart } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { ServiceManagement } from './ServiceManagement';
 import { AdherentManagement } from './AdherentManagement';
 
+/**
+ * Palette "Cold Professional" :
+ * - Gamme de bleus froids, ardoise et teal
+ * - Design sobre, statique (sans animation hover)
+ */
+
 export const AdminDashboard: React.FC = () => {
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-20 font-sans">
       
-      {/* Content */}
-      <div className="transition-all duration-300">
-        <section className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-          <h2 className="text-xl font-bold text-gray-800 text-left">Vue d'ensemble système</h2>
-          
-          {/* KPI Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <KpiCard title="Adhérents totaux" value="1,284" icon={<Users className="text-indigo-600"/>} />
-            <KpiCard title="Visites aujourd'hui" value="86" icon={<Activity className="text-emerald-600"/>} />
-            <KpiCard title="Utilisateurs actifs" value="12" icon={<TrendingUp className="text-blue-600"/>} />
+      {/* Header Froid & Pro */}
+      <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <h1 className="text-[15px] font-bold text-slate-800 tracking-tight uppercase">Administration <span className="text-blue-600">Système</span></h1>
+            <p className="text-slate-500 mt-2 text-[13px]">Supervision globale des ressources.</p>
           </div>
-        </section>
-
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 text-left">Gestion des adhérents</h2>
-          <AdherentManagement />
-        </section>
-        
-        <div className="mt-12">
-          <UserManagement />
-        </div>
-        
-        <div className="mt-12">
-          <ServiceManagement />
+          <div className="flex gap-4">
+             <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+                <Clock className="text-slate-500" size={14} />
+                <span className="text-slate-700 font-bold text-[13px]">{new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
+             </div>
+          </div>
         </div>
       </div>
 
+      {/* Action Cards - Couleurs Froides, Statiques */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-1">
+        <ColdActionButton title="Ajouter Adhérent" icon={<PlusCircle size={18} />} theme="blue" />
+        <ColdActionButton title="Configurer Services" icon={<Settings size={18} />} theme="teal" />
+        <ColdActionButton title="Rapports Globaux" icon={<FileBarChart size={18} />} theme="slate" />
+      </div>
+
+      <div className="px-1 pt-4">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <ColdKpiCard title="Adhérents" value="1,284" theme="blue" />
+            <ColdKpiCard title="Visites" value="86" theme="teal" />
+            <ColdKpiCard title="Sessions" value="12" theme="slate" />
+        </div>
+
+        {/* Sections */}
+        <div className="grid grid-cols-1 gap-8 mt-12">
+          <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+             <h2 className="text-[13px] font-bold text-slate-700 uppercase mb-8">Gestion des Adhérents</h2>
+             <AdherentManagement />
+          </div>
+          <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+             <UserManagement />
+          </div>
+          <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+             <ServiceManagement />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-const KpiCard: React.FC<{ title: string, value: string, icon: React.ReactNode }> = ({ title, value, icon }) => (
-  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-    <div>
-      <p className="text-sm text-gray-500 font-medium">{title}</p>
-      <h3 className="text-3xl font-black text-gray-900 mt-2">{value}</h3>
+const ColdKpiCard: React.FC<{ title: string, value: string, theme: 'blue' | 'teal' | 'slate' }> = ({ title, value, theme }) => {
+  const styles = {
+    blue:   { border: 'border-blue-200', text: 'text-blue-700' },
+    teal:   { border: 'border-teal-200', text: 'text-teal-700' },
+    slate:  { border: 'border-slate-300', text: 'text-slate-700' },
+  };
+  const s = styles[theme];
+  return (
+    <div className={`bg-white p-6 rounded-xl border-l-4 ${s.border} shadow-sm`}>
+      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">{title}</p>
+      <h3 className={`text-2xl font-bold ${s.text}`}>{value}</h3>
     </div>
-    <div className="p-3 bg-gray-50 rounded-xl">{icon}</div>
-  </div>
-);
+  );
+};
+
+const ColdActionButton: React.FC<{ title: string, icon: React.ReactNode, theme: 'blue' | 'teal' | 'slate' }> = ({ title, icon, theme }) => {
+  const styles = {
+    blue:   { bg: 'bg-blue-50', text: 'text-blue-700' },
+    teal:   { bg: 'bg-teal-50', text: 'text-teal-700' },
+    slate:  { bg: 'bg-slate-100', text: 'text-slate-700' },
+  };
+  const s = styles[theme];
+  return (
+    <button className={`p-5 rounded-lg border border-slate-200 flex items-center gap-4 text-left ${s.bg}`}>
+      <div className={s.text}>{icon}</div>
+      <span className={`text-[13px] font-bold ${s.text}`}>{title}</span>
+    </button>
+  );
+};

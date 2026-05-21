@@ -73,35 +73,33 @@ export const HistoriquePage: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider font-bold">
-                <th className="px-6 py-4">Heure</th>
                 <th className="px-6 py-4">Visiteur</th>
                 <th className="px-6 py-4">Badge</th>
                 <th className="px-6 py-4">Service / Motif</th>
                 <th className="px-6 py-4">Fonctionnaire</th>
+                <th className="px-6 py-4 text-center">Badge Pris</th>
+                <th className="px-6 py-4 text-center">Acceptée</th>
+                <th className="px-6 py-4 text-center">Fin Visite</th>
+                <th className="px-6 py-4 text-center">Badge Rendu</th>
                 <th className="px-6 py-4">Statut</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
                     Chargement des données...
                   </td>
                 </tr>
               ) : visites?.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
                     Aucune visite enregistrée aujourd'hui.
                   </td>
                 </tr>
               ) : (
                 visites?.map((visite: any) => (
                   <tr key={visite.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-gray-700">
-                        {new Date(visite.heureArrivee).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-gray-900">{visite.visiteurNom}</span>
@@ -121,6 +119,26 @@ export const HistoriquePage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-600 font-medium">{visite.fonctionnaireNom}</span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-sm text-gray-500 font-bold tabular-nums">
+                        {visite.heureArrivee ? new Date(visite.heureArrivee).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-sm text-blue-600 font-bold tabular-nums">
+                        {visite.heureAcceptation ? new Date(visite.heureAcceptation).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-sm text-gray-600 font-bold tabular-nums">
+                        {visite.heureCloture ? new Date(visite.heureCloture).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-sm text-emerald-600 font-bold tabular-nums">
+                        {visite.heureRestitutionBadge ? new Date(visite.heureRestitutionBadge).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${getStatusStyle(visite.statut)}`}>

@@ -321,7 +321,7 @@ export const ResponsableMesVisites: React.FC = () => {
   const enCours   = activeVisits.filter(v => v.statut === 'EN_COURS');
 
   return (
-    <div className="p-6 min-h-screen bg-[#f8f9fa]">
+    <div className="space-y-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>

@@ -205,7 +205,7 @@ export const BadgesPage: React.FC = () => {
   const occupes = badges.filter(b => b.statut !== 'DISPONIBLE').length;
 
   return (
-    <div className="p-6 min-h-screen bg-[#f8f9fa]">
+    <div className="space-y-6">
       {/* ── Header ── */}
       <div className="mb-6 flex items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center shadow-sm">

@@ -8,6 +8,8 @@ import {
 import api from '../services/api';
 import { referenceService } from '../services/referenceService';
 
+import logo from '../assets/logo.png';
+
 // ─── Config statique pour statuts connus ─────────────────────────────────────
 const KNOWN_STATUTS: Record<string, {
   label: string; desc: string; icon: React.ReactNode;
@@ -178,10 +180,7 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/fonctionnaire')}>
             <Menu className="text-gray-500 mr-1" size={20} />
-            <div className="flex flex-col leading-none">
-              <span className="text-[10px] font-bold text-red-600 uppercase">Fondation</span>
-              <span className="text-[10px] font-bold text-blue-700 uppercase">Hassan II</span>
-            </div>
+            <img src={logo} alt="Logo" className="h-16 w-auto object-contain pt-1" />
           </div>
           <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
             <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -236,7 +235,7 @@ export const FonctionnaireLayout: React.FC<{ children: React.ReactNode }> = ({ c
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto p-8 w-full">
         {children}
       </main>
 

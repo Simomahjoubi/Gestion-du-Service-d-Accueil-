@@ -11,8 +11,35 @@ body {
   padding: 0;
   min-height: 100vh;
   width: 100%;
+  background-color: #f8fafc;
 }
 
 #root {
   width: 100%;
+}
+
+@layer utilities {
+  .animate-in {
+    animation-duration: 500ms;
+    animation-fill-mode: forwards;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fade-in {
+    animation-name: fade-in;
+  }
+
+  .slide-in-from-top-4 {
+    animation-name: slide-in-from-top-4;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-in-from-top-4 {
+    from { transform: translateY(-1rem); }
+    to { transform: translateY(0); }
+  }
 }

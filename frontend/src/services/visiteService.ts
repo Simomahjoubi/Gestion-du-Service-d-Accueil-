@@ -21,6 +21,11 @@ export const visiteService = {
     return response.data;
   },
 
+  getHourlyStats: async () => {
+    const response = await api.get('/visites/stats/hourly');
+    return response.data;
+  },
+
   getVisitesToday: async () => {
     const response = await api.get('/visites/today');
     return response.data;
