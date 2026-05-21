@@ -113,6 +113,13 @@ public class VisiteController {
 
     private VisiteResponse mapToResponse(Visite visite) {
         Visiteur v = visite.getVisiteur();
+        Utilisateur f = visite.getFonctionnaire();
+        
+        boolean occupe = false;
+        if (f != null) {
+            occupe = visiteRepo.existsByFonctionnaireIdAndStatut(f.getId(), StatutVisite.EN_COURS);
+        }
+
         return VisiteResponse.builder()
                 .id(visite.getId())
                 .visiteurId(v.getId())
@@ -123,8 +130,8 @@ public class VisiteController {
                 .typeAdherentDetail(v.getTypeAdherentDetail())
                 .grade(v.getGrade())
                 .typeAssurance(v.getTypeAssurance())
-                .fonctionnaireId(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getId() : null)
-                .fonctionnaireNom(visite.getFonctionnaire() != null ? visite.getFonctionnaire().getNomComplet() : "Non assigné")
+                .fonctionnaireId(f != null ? f.getId() : null)
+                .fonctionnaireNom(f != null ? f.getNomComplet() : "Non assigné")
                 .badgeCode(visite.getBadge() != null ? visite.getBadge().getCode() : "—")
                 .statut(visite.getStatut())
                 .heureArrivee(visite.getHeureArrivee())
@@ -135,6 +142,7 @@ public class VisiteController {
                 .heureRestitutionBadge(visite.getHeureRestitutionBadge())
                 .motifLibelle(visite.getObjetVisite() != null ? visite.getObjetVisite().getLibelleFr() : "—")
                 .serviceNom(visite.getService() != null ? visite.getService().getNom() : "—")
+                .fonctionnaireOccupe(occupe)
                 .build();
     }
 

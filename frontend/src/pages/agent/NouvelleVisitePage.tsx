@@ -95,6 +95,8 @@ export const NouvelleVisitePage: React.FC = () => {
     } finally { setLoading(false); }
   };
 
+  const [showOccupiedModal, setShowOccupiedModal] = useState(false);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedServiceId || !selectedMotifId || !foundVisitor) {
@@ -111,7 +113,11 @@ export const NouvelleVisitePage: React.FC = () => {
         agentId: user?.id,
       });
       setSavedVisite(response.data);
-      setShowModal(true);
+      if (response.data.fonctionnaireOccupe) {
+        setShowOccupiedModal(true);
+      } else {
+        setShowModal(true);
+      }
     } catch (err: any) { 
       const msg = err?.response?.data?.error || "Erreur lors de l'enregistrement de la visite.";
       if (msg.includes("indisponible") || msg.includes("patienter")) {
@@ -444,6 +450,44 @@ export const NouvelleVisitePage: React.FC = () => {
                 className="w-full bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg transition-all"
               >
                 J'ai compris
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOccupiedModal && savedVisite && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-amber-100 p-8 text-center relative">
+              <button 
+                onClick={() => { setShowOccupiedModal(false); setShowModal(true); }}
+                className="absolute right-4 top-4 p-1 text-amber-600 hover:bg-amber-200 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <Clock size={40} className="text-amber-500 animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-black text-amber-900 uppercase tracking-tight">Fonctionnaire Occupé</h2>
+              <p className="text-amber-700 font-bold mt-2">
+                {savedVisite.fonctionnaireNom} traite actuellement une autre visite.
+              </p>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+                <p className="text-sm text-amber-900 leading-relaxed font-medium">
+                  Le dossier a bien été assigné, mais il sera placé dans la **file d'attente** de cet agent. 
+                  Veuillez informer le visiteur qu'il devra patienter quelques instants.
+                </p>
+              </div>
+
+              <button 
+                onClick={() => { setShowOccupiedModal(false); setShowModal(true); }}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg shadow-amber-200 transition-all flex items-center justify-center gap-2"
+              >
+                Continuer <ArrowRight size={20}/>
               </button>
             </div>
           </div>

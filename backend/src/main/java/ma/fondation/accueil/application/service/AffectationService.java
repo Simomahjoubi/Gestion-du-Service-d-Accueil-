@@ -75,24 +75,30 @@ public class AffectationService {
     // ── SPECIFIQUE ───────────────────────────────────────────────────────────
 
     private Utilisateur appliquerSpecifique(Long motifId) {
-        List<MotifAffectation> priorites = motifAffectationRepo.findByMotifIdOrderByPrioriteAsc(motifId)
-                .stream()
-                .filter(ma -> ma.getUtilisateur().getRole() != RoleUtilisateur.RESPONSABLE)
-                .toList();
+        List<MotifAffectation> priorites = motifAffectationRepo.findByMotifIdOrderByPrioriteAsc(motifId);
 
         if (priorites.isEmpty()) {
             throw new RuntimeException("Aucun fonctionnaire configuré pour ce motif spécifique.");
         }
 
-        // Parcourir p1 → p2 → p3 ; retourner le premier disponible
+        // Parcourir p1 → p2 → p3
         for (MotifAffectation ma : priorites) {
             Utilisateur u = ma.getUtilisateur();
-            if (u.isActif() && !STATUTS_INDISPONIBLES.contains(u.getStatutPresence())) {
+            if (!u.isActif()) continue;
+
+            // Si c'est un responsable, on l'affecte même s'il est hors ligne (selon demande utilisateur)
+            if (u.getRole() == RoleUtilisateur.RESPONSABLE) {
+                return u;
+            }
+
+            // Pour les fonctionnaires standards, on vérifie la disponibilité
+            if (!STATUTS_INDISPONIBLES.contains(u.getStatutPresence())) {
                 return u;
             }
         }
 
-        // Tous indisponibles
+        // Si on arrive ici et qu'il y avait un responsable dans la liste, il aurait été retourné.
+        // Donc ici on n'a que des fonctionnaires indisponibles.
         throw new RuntimeException(
             "Tous les fonctionnaires affectés à ce motif sont actuellement indisponibles. " +
             "Veuillez attendre qu'un fonctionnaire se libère ou essayer ultérieurement."
